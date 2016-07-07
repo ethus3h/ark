@@ -95,27 +95,31 @@ void AddDialog::slotOpenOptions(bool checked)
 {
     Q_UNUSED(checked);
 
-    QPointer<QDialog> dlg = new QDialog(this);
-    QVBoxLayout *vlayout = new QVBoxLayout(dlg);
-    dlg->setWindowTitle(i18n("Advanced Options"));
+    optionsDialog = new QDialog(this);
+    QVBoxLayout *vlayout = new QVBoxLayout(optionsDialog);
+    optionsDialog->setWindowTitle(i18n("Advanced Options"));
 
-    optionsWidget = new CompressionOptionsWidget(m_mimeType, m_compOptions, dlg);
+    CompressionOptionsWidget *optionsWidget = new CompressionOptionsWidget(m_mimeType, m_compOptions, optionsDialog);
     optionsWidget->setMinimumWidth(300);
     optionsWidget->setEncryptionVisible(false);
     vlayout->addWidget(optionsWidget);
 
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, dlg);
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, optionsDialog);
     vlayout->addWidget(buttonBox);
-    connect(buttonBox, &QDialogButtonBox::accepted, dlg, &QDialog::accept);
-    connect(buttonBox, &QDialogButtonBox::rejected, dlg, &QDialog::reject);
+    connect(buttonBox, &QDialogButtonBox::accepted, optionsDialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, optionsDialog, &QDialog::reject);
 
-    dlg->layout()->setSizeConstraint(QLayout::SetFixedSize);
+    optionsDialog->layout()->setSizeConstraint(QLayout::SetFixedSize);
 
-    if (dlg->exec() == QDialog::Accepted) {
-        m_compOptions = optionsWidget->commpressionOptions();
-        qCDebug(ARK) << "accepted with options:" << m_compOptions;
-    }
-    delete dlg;
+    connect(optionsDialog, &QDialog::finished, this, [this, optionsWidget](int result) {
+        if (result == QDialog::Accepted) {
+            m_compOptions = optionsWidget->commpressionOptions();
+        }
+        optionsDialog->deleteLater();
+        optionsWidget->deleteLater();
+    });
+
+    optionsDialog->open();
 }
 
 }
