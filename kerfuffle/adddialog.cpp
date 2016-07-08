@@ -102,6 +102,7 @@ void AddDialog::slotOpenOptions(bool checked)
     CompressionOptionsWidget *optionsWidget = new CompressionOptionsWidget(m_mimeType, m_compOptions, optionsDialog);
     optionsWidget->setMinimumWidth(300);
     optionsWidget->setEncryptionVisible(false);
+    optionsWidget->collapsibleCompression->setExpanded(true);
     vlayout->addWidget(optionsWidget);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, optionsDialog);
