@@ -103,7 +103,7 @@ void AddDialogTest::testBasicWidgets()
 
     dialog->slotOpenOptions(true);
 
-    auto collapsibleCompression = dialog->optionsDialog.data()->findChild<KCollapsibleGroupBox*>(QStringLiteral("collapsibleCompression"));
+    auto collapsibleCompression = dialog->optionsDialog->findChild<KCollapsibleGroupBox*>(QStringLiteral("collapsibleCompression"));
     QVERIFY(collapsibleCompression);
 
     if (supportsCompLevel) {
@@ -115,7 +115,7 @@ void AddDialogTest::testBasicWidgets()
         // Test that collapsiblegroupbox is disabled for mimetypes that don't support compression levels.
         QVERIFY(collapsibleCompression->isEnabled());
 
-        auto compLevelSlider = dialog->optionsDialog.data()->findChild<QSlider*>(QStringLiteral("compLevelSlider"));
+        auto compLevelSlider = dialog->optionsDialog->findChild<QSlider*>(QStringLiteral("compLevelSlider"));
         QVERIFY(compLevelSlider);
 
         // Test that min/max of slider are correct.
@@ -126,7 +126,7 @@ void AddDialogTest::testBasicWidgets()
         compLevelSlider->setValue(compLevel);
     }
 
-    dialog->optionsDialog.data()->accept();
+    dialog->optionsDialog->accept();
 
     if (supportsCompLevel) {
         // Test that the value set by slider is exported from AddDialog.

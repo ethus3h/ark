@@ -36,7 +36,6 @@
 
 #include <QDialog>
 #include <QMimeType>
-#include <QPointer>
 
 class QUrl;
 
@@ -54,7 +53,7 @@ public:
     virtual ~AddDialog();
     QStringList selectedFiles() const;
     CompressionOptions compressionOptions() const;
-    QPointer<QDialog> optionsDialog;
+    QDialog *optionsDialog;
 
 private:
     KFileWidget *m_fileWidget;
