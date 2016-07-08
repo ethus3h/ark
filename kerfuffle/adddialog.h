@@ -61,7 +61,7 @@ private:
     CompressionOptions m_compOptions;
 
 public slots:
-    void slotOpenOptions(bool checked);
+    void slotOpenOptions();
 };
 }
 

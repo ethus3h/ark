@@ -37,11 +37,9 @@
 
 namespace Kerfuffle
 {
-CompressionOptionsWidget::CompressionOptionsWidget(const QMimeType &mimeType,
-                                                   const CompressionOptions &opts,
-                                                   QWidget *parent)
+CompressionOptionsWidget::CompressionOptionsWidget(QWidget *parent,
+                                                   const CompressionOptions &opts)
     : QWidget(parent)
-    , m_mimetype(mimeType)
     , m_opts(opts)
 {
     setupUi(this);
@@ -49,8 +47,6 @@ CompressionOptionsWidget::CompressionOptionsWidget(const QMimeType &mimeType,
     KColorScheme colorScheme(QPalette::Active, KColorScheme::View);
     pwdWidget->setBackgroundWarningColor(colorScheme.background(KColorScheme::NegativeBackground).color());
     pwdWidget->setPasswordStrengthMeterVisible(false);
-
-    updateWidgets();
 }
 
 CompressionOptions CompressionOptionsWidget::commpressionOptions() const
@@ -117,6 +113,7 @@ void CompressionOptionsWidget::updateWidgets()
                                                m_mimetype.comment()));
     } else {
         collapsibleCompression->setEnabled(true);
+        collapsibleCompression->setToolTip(QString());
         compLevelSlider->setMinimum(archiveFormat.minCompressionLevel());
         compLevelSlider->setMaximum(archiveFormat.maxCompressionLevel());
         if (m_opts.contains(QStringLiteral("CompressionLevel"))) {

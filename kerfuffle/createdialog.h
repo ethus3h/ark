@@ -31,8 +31,8 @@
 #ifndef CREATEDIALOG_H
 #define CREATEDIALOG_H
 
+#include "archive_kerfuffle.h"
 #include "kerfuffle_export.h"
-#include "compressionoptionswidget.h"
 #include "pluginmanager.h"
 
 #include <KConfigGroup>
@@ -92,7 +92,6 @@ private:
     QStringList m_supportedMimeTypes;
     PluginManager m_pluginManger;
     CompressionOptions m_compOptions;
-    CompressionOptionsWidget *optionsWidget;
 
 private slots:
     void slotFileNameEdited(const QString &text);

@@ -56,7 +56,6 @@ void AddDialogTest::testBasicWidgets_data()
     QTest::addColumn<int>("compLevel");
 
     QTest::newRow("tar") << QStringLiteral("application/x-tar") << false << 3;
-
     QTest::newRow("targzip") << QStringLiteral("application/x-compressed-tar") << true << 3;
     QTest::newRow("tarbzip") << QStringLiteral("application/x-bzip-compressed-tar") << true << 3;
     QTest::newRow("tarZ") << QStringLiteral("application/x-tarz") << false << 3;
@@ -101,22 +100,21 @@ void AddDialogTest::testBasicWidgets()
 
     AddDialog *dialog = new AddDialog(Q_NULLPTR, QString(), QUrl(), mime);
 
-    dialog->slotOpenOptions(true);
+    dialog->slotOpenOptions();
 
     auto collapsibleCompression = dialog->optionsDialog->findChild<KCollapsibleGroupBox*>(QStringLiteral("collapsibleCompression"));
     QVERIFY(collapsibleCompression);
 
     if (supportsCompLevel) {
-
-        const KPluginMetaData metadata = PluginManager().preferredPluginFor(mime)->metaData();
-        const ArchiveFormat archiveFormat = ArchiveFormat::fromMetadata(mime, metadata);
-        QVERIFY(archiveFormat.isValid());
-
-        // Test that collapsiblegroupbox is disabled for mimetypes that don't support compression levels.
+        // Test that collapsiblegroupbox is enabled for mimetypes that support compression levels.
         QVERIFY(collapsibleCompression->isEnabled());
 
         auto compLevelSlider = dialog->optionsDialog->findChild<QSlider*>(QStringLiteral("compLevelSlider"));
         QVERIFY(compLevelSlider);
+
+        const KPluginMetaData metadata = PluginManager().preferredPluginFor(mime)->metaData();
+        const ArchiveFormat archiveFormat = ArchiveFormat::fromMetadata(mime, metadata);
+        QVERIFY(archiveFormat.isValid());
 
         // Test that min/max of slider are correct.
         QCOMPARE(compLevelSlider->minimum(), archiveFormat.minCompressionLevel());
@@ -124,6 +122,9 @@ void AddDialogTest::testBasicWidgets()
 
         // Set the compression level slider.
         compLevelSlider->setValue(compLevel);
+    } else {
+        // Test that collapsiblegroupbox is disabled for mimetypes that don't support compression levels.
+        QVERIFY(!collapsibleCompression->isEnabled());
     }
 
     dialog->optionsDialog->accept();

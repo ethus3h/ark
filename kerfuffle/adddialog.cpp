@@ -49,16 +49,16 @@ AddDialog::AddDialog(QWidget *parent,
         , m_mimeType(mimeType)
         , m_compOptions(opts)
 {
-    qCDebug(ARK) << "AddDialog loaded with opts:" << m_compOptions;
+    qCDebug(ARK) << "AddDialog loaded with options:" << m_compOptions;
 
     setWindowTitle(title);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
-
     m_fileWidget = new KFileWidget(startDir, this);
     vlayout->addWidget(m_fileWidget);
 
-    QPushButton *optionsButton = new QPushButton(i18n("Advanced Options"));
+    QPushButton *optionsButton = new QPushButton(QIcon::fromTheme(QStringLiteral("settings-configure")),
+                                                 i18n("Advanced Options"));
     optionsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     m_fileWidget->setCustomWidget(optionsButton);
 
@@ -67,7 +67,7 @@ AddDialog::AddDialog(QWidget *parent,
     m_fileWidget->setMode(KFile::Files | KFile::Directory | KFile::LocalOnly | KFile::ExistingOnly);
     m_fileWidget->setOperationMode(KFileWidget::Opening);
 
-    m_fileWidget->okButton()->setText(i18n("Add"));
+    m_fileWidget->okButton()->setText(i18nc("@action:button", "Add"));
     m_fileWidget->okButton()->show();
     connect(m_fileWidget->okButton(), &QPushButton::clicked, m_fileWidget, &KFileWidget::slotOk);
     connect(m_fileWidget, &KFileWidget::accepted, m_fileWidget, &KFileWidget::accept);
@@ -91,18 +91,16 @@ CompressionOptions AddDialog::compressionOptions() const
     return m_compOptions;
 }
 
-void AddDialog::slotOpenOptions(bool checked)
+void AddDialog::slotOpenOptions()
 {
-    Q_UNUSED(checked);
-
     optionsDialog = new QDialog(this);
     QVBoxLayout *vlayout = new QVBoxLayout(optionsDialog);
     optionsDialog->setWindowTitle(i18n("Advanced Options"));
 
-    CompressionOptionsWidget *optionsWidget = new CompressionOptionsWidget(m_mimeType, m_compOptions, optionsDialog);
-    optionsWidget->setMinimumWidth(300);
+    CompressionOptionsWidget *optionsWidget = new CompressionOptionsWidget(optionsDialog, m_compOptions);
+    optionsWidget->setMimeType(m_mimeType);
     optionsWidget->setEncryptionVisible(false);
-    optionsWidget->collapsibleCompression->setExpanded(true);
+    optionsWidget->collapsibleCompression->expand();
     vlayout->addWidget(optionsWidget);
 
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, optionsDialog);
@@ -117,7 +115,6 @@ void AddDialog::slotOpenOptions(bool checked)
             m_compOptions = optionsWidget->commpressionOptions();
         }
         optionsDialog->deleteLater();
-        optionsWidget->deleteLater();
     });
 
     optionsDialog->open();

@@ -93,8 +93,7 @@ CreateDialog::CreateDialog(QWidget *parent,
 
     m_vlayout->addWidget(m_ui);
 
-    optionsWidget = new CompressionOptionsWidget(currentMimeType(), QHash<QString, QVariant>(), this);
-    m_ui->vlayout->insertWidget(1, optionsWidget);
+    m_ui->optionsWidget->setMimeType(currentMimeType());
 
     loadConfiguration();
 
@@ -116,7 +115,7 @@ void CreateDialog::slotFileNameEdited(const QString &fileName)
 
 void CreateDialog::slotUpdateWidgets(int index)
 {
-    optionsWidget->setMimeType(QMimeDatabase().mimeTypeForName(m_supportedMimeTypes.at(index)));
+    m_ui->optionsWidget->setMimeType(QMimeDatabase().mimeTypeForName(m_supportedMimeTypes.at(index)));
 }
 
 void CreateDialog::slotUpdateFilenameExtension(int index)
@@ -149,32 +148,32 @@ QUrl CreateDialog::selectedUrl() const
 
 int CreateDialog::compressionLevel() const
 {
-    return optionsWidget->compressionLevel();
+    return m_ui->optionsWidget->compressionLevel();
 }
 
 QString CreateDialog::password() const
 {
-    return optionsWidget->password();
+    return m_ui->optionsWidget->password();
 }
 
 bool CreateDialog::isEncryptionAvailable() const
 {
-    return optionsWidget->isEncryptionAvailable();
+    return m_ui->optionsWidget->isEncryptionAvailable();
 }
 
 bool CreateDialog::isEncryptionEnabled() const
 {
-    return optionsWidget->isEncryptionEnabled();
+    return m_ui->optionsWidget->isEncryptionEnabled();
 }
 
 bool CreateDialog::isHeaderEncryptionAvailable() const
 {
-    return optionsWidget->isHeaderEncryptionAvailable();
+    return m_ui->optionsWidget->isHeaderEncryptionAvailable();
 }
 
 bool CreateDialog::isHeaderEncryptionEnabled() const
 {
-    return optionsWidget->isHeaderEncryptionEnabled();
+    return m_ui->optionsWidget->isHeaderEncryptionEnabled();
 }
 
 void CreateDialog::accept()
@@ -184,7 +183,7 @@ void CreateDialog::accept()
         return;
     }
 
-    switch (optionsWidget->passwordStatus()) {
+    switch (m_ui->optionsWidget->passwordStatus()) {
     case KNewPasswordWidget::WeakPassword:
     case KNewPasswordWidget::StrongPassword:
         QDialog::accept();

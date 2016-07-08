@@ -8,12 +8,16 @@ add_library(jsoninterface STATIC ${JSONINTERFACE_SOURCES})
 target_link_libraries(jsoninterface kerfuffle)
 
 ecm_add_tests(
-    adddialogtest.cpp
     addtoarchivetest.cpp
     archivetest.cpp
     createdialogtest.cpp
     metadatatest.cpp
     mimetypetest.cpp
+    LINK_LIBRARIES kerfuffle Qt5::Test
+    NAME_PREFIX kerfuffle-)
+
+ecm_add_test(
+    adddialogtest.cpp
     LINK_LIBRARIES kerfuffle Qt5::Test KF5::KIOFileWidgets
     NAME_PREFIX kerfuffle-)
 
