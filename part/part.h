@@ -133,6 +133,7 @@ signals:
     void quit();
 
 private:
+    void resetGui();
     void setupView();
     void setupActions();
     bool isSingleFolderArchive() const;
@@ -172,6 +173,7 @@ private:
     QGroupBox *m_commentBox;
     QPlainTextEdit *m_commentView;
     KMessageWidget *m_commentMsgWidget;
+    KMessageWidget *m_messageWidget;
 };
 
 } // namespace Ark

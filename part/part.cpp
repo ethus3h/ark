@@ -117,6 +117,9 @@ Part::Part(QWidget *parentWidget, QObject *parent, const QVariantList& args)
     vbox->addWidget(m_commentView);
     m_commentBox->setLayout(vbox);
 
+    m_messageWidget = new KMessageWidget(parentWidget);
+    m_messageWidget->hide();
+
     m_commentMsgWidget = new KMessageWidget();
     m_commentMsgWidget->setText(i18n("Comment has been modified."));
     m_commentMsgWidget->setMessageType(KMessageWidget::Information);
@@ -136,6 +139,7 @@ Part::Part(QWidget *parentWidget, QObject *parent, const QVariantList& args)
 
     // Configure the QVBoxLayout and add widgets
     m_vlayout->setContentsMargins(0,0,0,0);
+    m_vlayout->addWidget(m_messageWidget);
     m_vlayout->addWidget(m_splitter);
 
     // Vertical QSplitter for the file view and comment field.
@@ -499,6 +503,13 @@ void Part::slotTestArchive()
     job->start();
 }
 
+void Part::resetGui()
+{
+    m_messageWidget->hide();
+    m_commentView->clear();
+    m_commentBox->hide();
+}
+
 void Part::slotTestingDone(KJob* job)
 {
     if (job->error() && job->error() != KJob::KilledJobError) {
@@ -605,8 +616,7 @@ bool Part::openFile()
 {
     qCDebug(ARK) << "Attempting to open archive" << localFilePath();
 
-    m_commentView->clear();
-    m_commentBox->hide();
+    resetGui();
 
     if (!isLocalFileValid()) {
         return false;
@@ -1259,6 +1269,9 @@ void Part::slotAddFilesDone(KJob* job)
 {
     if (job->error() && job->error() != KJob::KilledJobError) {
         KMessageBox::error(widget(), job->errorString());
+    } else {
+        // Hide the "archive will be created as soon as you add a file" message.
+        m_messageWidget->hide();
     }
 }
 
@@ -1369,11 +1382,11 @@ void Part::slotShowContextMenu()
 
 void Part::displayMsgWidget(KMessageWidget::MessageType type, const QString& msg)
 {
-    KMessageWidget *msgWidget = new KMessageWidget();
-    msgWidget->setText(msg);
-    msgWidget->setMessageType(type);
-    m_vlayout->insertWidget(0, msgWidget);
-    msgWidget->animatedShow();
+    // The widget could be already visible, so hide it.
+    m_messageWidget->hide();
+    m_messageWidget->setText(msg);
+    m_messageWidget->setMessageType(type);
+    m_messageWidget->animatedShow();
 }
 
 } // namespace Ark
