@@ -163,6 +163,7 @@ private:
     QList<QTemporaryDir*>      m_tmpOpenDirList;
     bool                  m_busy;
     OpenFileMode m_openFileMode;
+    QUrl m_lastUsedAddPath;
 
     KAbstractWidgetJobTracker  *m_jobTracker;
     KParts::StatusBarExtension *m_statusBarExtension;

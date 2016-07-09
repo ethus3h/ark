@@ -1252,7 +1252,7 @@ void Part::slotAddFiles()
 
     QPointer<AddDialog> dlg = new AddDialog(widget(),
                                             i18nc("@title:window", "Add Files"),
-                                            QUrl::fromLocalFile(QDir::homePath()),
+                                            m_lastUsedAddPath,
                                             m_model->archive()->mimeType(),
                                             opts);
 
