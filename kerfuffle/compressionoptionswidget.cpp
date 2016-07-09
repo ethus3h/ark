@@ -110,7 +110,7 @@ void CompressionOptionsWidget::updateWidgets()
     if (archiveFormat.maxCompressionLevel() == 0) {
         collapsibleCompression->setEnabled(false);
         collapsibleCompression->setToolTip(i18n("It is not possible to set compression level for the %1 format.",
-                                               m_mimetype.comment()));
+                                                m_mimetype.comment()));
     } else {
         collapsibleCompression->setEnabled(true);
         collapsibleCompression->setToolTip(QString());

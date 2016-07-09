@@ -53,39 +53,40 @@ void AddDialogTest::testBasicWidgets_data()
 {
     QTest::addColumn<QString>("mimeType");
     QTest::addColumn<bool>("supportsCompLevel");
-    QTest::addColumn<int>("compLevel");
+    QTest::addColumn<int>("initialCompLevel");
+    QTest::addColumn<int>("changeToCompLevel");
 
-    QTest::newRow("tar") << QStringLiteral("application/x-tar") << false << 3;
-    QTest::newRow("targzip") << QStringLiteral("application/x-compressed-tar") << true << 3;
-    QTest::newRow("tarbzip") << QStringLiteral("application/x-bzip-compressed-tar") << true << 3;
-    QTest::newRow("tarZ") << QStringLiteral("application/x-tarz") << false << 3;
-    QTest::newRow("tarxz") << QStringLiteral("application/x-xz-compressed-tar") << true << 3;
-    QTest::newRow("tarlzma") << QStringLiteral("application/x-lzma-compressed-tar") << true << 6;
-    QTest::newRow("tarlzop") << QStringLiteral("application/x-tzo") << true << 4;
-    QTest::newRow("tarlzip") << QStringLiteral("application/x-lzip-compressed-tar") << true << 7;
+    QTest::newRow("tar") << QStringLiteral("application/x-tar") << false << -1 << -1;
+    QTest::newRow("targzip") << QStringLiteral("application/x-compressed-tar") << true << 3 << 7;
+    QTest::newRow("tarbzip") << QStringLiteral("application/x-bzip-compressed-tar") << true << 3 << 7;
+    QTest::newRow("tarZ") << QStringLiteral("application/x-tarz") << false << -1 << -1;
+    QTest::newRow("tarxz") << QStringLiteral("application/x-xz-compressed-tar") << true << 3 << 7;
+    QTest::newRow("tarlzma") << QStringLiteral("application/x-lzma-compressed-tar") << true << 3 << 7;
+    QTest::newRow("tarlzop") << QStringLiteral("application/x-tzo") << true << 3 << 7;
+    QTest::newRow("tarlzip") << QStringLiteral("application/x-lzip-compressed-tar") << true << 3 << 7;
 
     const auto writeMimeTypes = m_pluginManager.supportedWriteMimeTypes();
 
     if (writeMimeTypes.contains(QStringLiteral("application/zip"))) {
-        QTest::newRow("zip") << QStringLiteral("application/zip") << true << 3;
+        QTest::newRow("zip") << QStringLiteral("application/zip") << true << 3 << 7;
     } else {
         qDebug() << "zip format not available, skipping test.";
     }
 
     if (writeMimeTypes.contains(QStringLiteral("application/x-7z-compressed"))) {
-        QTest::newRow("7z") << QStringLiteral("application/x-7z-compressed") << true << 3;
+        QTest::newRow("7z") << QStringLiteral("application/x-7z-compressed") << true << 3 << 7;
     } else {
         qDebug() << "7z format not available, skipping test.";
     }
 
     if (writeMimeTypes.contains(QStringLiteral("application/x-rar"))) {
-        QTest::newRow("rar") << QStringLiteral("application/x-rar") << true << 3;
+        QTest::newRow("rar") << QStringLiteral("application/x-rar") << true << 2 << 5;
     } else {
         qDebug() << "rar format not available, skipping test.";
     }
 
     if (writeMimeTypes.contains(QStringLiteral("application/x-lrzip-compressed-tar"))) {
-        QTest::newRow("tarlrzip") << QStringLiteral("application/x-lrzip-compressed-tar") << true << 3;
+        QTest::newRow("tarlrzip") << QStringLiteral("application/x-lrzip-compressed-tar") << true << 3 << 7;
     } else {
         qDebug() << "tar.lrzip format not available, skipping test.";
     }
@@ -96,7 +97,8 @@ void AddDialogTest::testBasicWidgets()
     QFETCH(QString, mimeType);
     const QMimeType mime = QMimeDatabase().mimeTypeForName(mimeType);
     QFETCH(bool, supportsCompLevel);
-    QFETCH(int, compLevel);
+    QFETCH(int, initialCompLevel);
+    QFETCH(int, changeToCompLevel);
 
     AddDialog *dialog = new AddDialog(Q_NULLPTR, QString(), QUrl(), mime);
 
@@ -120,19 +122,41 @@ void AddDialogTest::testBasicWidgets()
         QCOMPARE(compLevelSlider->minimum(), archiveFormat.minCompressionLevel());
         QCOMPARE(compLevelSlider->maximum(), archiveFormat.maxCompressionLevel());
 
+        // Test that the slider is set to default compression level.
+        QCOMPARE(compLevelSlider->value(), archiveFormat.defaultCompressionLevel());
+
         // Set the compression level slider.
-        compLevelSlider->setValue(compLevel);
+        compLevelSlider->setValue(changeToCompLevel);
     } else {
         // Test that collapsiblegroupbox is disabled for mimetypes that don't support compression levels.
         QVERIFY(!collapsibleCompression->isEnabled());
     }
 
     dialog->optionsDialog->accept();
+    dialog->accept();
 
     if (supportsCompLevel) {
         // Test that the value set by slider is exported from AddDialog.
-        QCOMPARE(dialog->compressionOptions()[QStringLiteral("CompressionLevel")].toInt(), compLevel);
+        QCOMPARE(dialog->compressionOptions()[QStringLiteral("CompressionLevel")].toInt(), changeToCompLevel);
     }
+
+    // Test that passing a compression level in ctor works.
+    CompressionOptions opts;
+    opts[QStringLiteral("CompressionLevel")] = initialCompLevel;
+
+    dialog = new AddDialog(Q_NULLPTR, QString(), QUrl(), mime, opts);
+    dialog->slotOpenOptions();
+
+    if (supportsCompLevel) {
+
+        auto compLevelSlider = dialog->optionsDialog->findChild<QSlider*>(QStringLiteral("compLevelSlider"));
+        QVERIFY(compLevelSlider);
+
+        // Test that slider is set to the compression level supplied in ctor.
+        QCOMPARE(compLevelSlider->value(), initialCompLevel);
+    }
+    dialog->optionsDialog->accept();
+    dialog->accept();
 }
 
 QTEST_MAIN(AddDialogTest)
