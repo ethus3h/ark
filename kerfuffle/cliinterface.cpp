@@ -114,11 +114,6 @@ bool CliInterface::list()
     m_operationMode = List;
     m_numberOfEntries = 0;
 
-    //const auto args = substituteListVariables(m_param.value(ListArgs).toStringList(), password());
-
-
-
-    //if (!runProcess(m_param.value(ListProgram).toStringList(), args)) {
     if (!runProcess(m_cliParameters->property("listProgram").toString(), m_cliParameters->listArgs(filename(), password()))) {
         return false;
     }
@@ -135,8 +130,6 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
     m_extractionOptions = options;
     m_extractedFiles = files;
     m_extractDestDir = destinationDirectory;
-    //const QStringList extractArgs = m_param.value(ExtractArgs).toStringList();
-
 
     //if (extractArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
     if (options.encryptedArchiveHint() && password().isEmpty()) {
@@ -145,15 +138,6 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
             return false;
         }
     }
-
-    // Populate the argument list.
-    /*
-    const QStringList args = substituteExtractVariables(extractArgs,
-                                                        files,
-                                                        options.preservePaths(),
-                                                        password());
-    */
-
 
     QUrl destDir = QUrl(destinationDirectory);
     QDir::setCurrent(destDir.adjusted(QUrl::RemoveScheme).url());
@@ -176,7 +160,6 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
         QDir::setCurrent(destDir.adjusted(QUrl::RemoveScheme).url());
     }
 
-    //if (!runProcess(m_param.value(ExtractProgram).toStringList(), args)) {
     if (!runProcess(m_cliParameters->property("extractProgram").toString(), m_cliParameters->extractArgs(filename(),
                                                                                                          extractFilesList(files),
                                                                                                          options.preservePaths(),
@@ -194,8 +177,6 @@ bool CliInterface::addFiles(const QVector<Archive::Entry*> &files, const Archive
     cacheParameterList();
 
     m_operationMode = Add;
-
-    //const QStringList addArgs = m_param.value(AddArgs).toStringList();
 
     QVector<Archive::Entry*> filesToPass = QVector<Archive::Entry*>();
     // If destination path is specified, we have recreate its structure inside the temp directory
@@ -270,11 +251,6 @@ bool CliInterface::moveFiles(const QVector<Archive::Entry*> &files, Archive::Ent
     QVector<Archive::Entry*> withoutChildren = entriesWithoutChildren(files);
     setNewMovedFiles(files, destination, withoutChildren.count());
 
-    //const auto moveArgs = m_param.value(MoveArgs).toStringList();
-
-    //const auto args = substituteMoveVariables(moveArgs, withoutChildren, destination, password());
-
-    //return runProcess(m_param.value(MoveProgram).toStringList(), args);
     return runProcess(m_cliParameters->property("moveProgram").toString(), m_cliParameters->moveArgs(filename(),
                                                                                                      withoutChildren,
                                                                                                      destination,
@@ -305,14 +281,6 @@ bool CliInterface::deleteFiles(const QVector<Archive::Entry*> &files)
 
     m_removedFiles = files;
 
-    //const auto deleteArgs = m_param.value(DeleteArgs).toStringList();
-
-    /*
-    const auto args = substituteDeleteVariables(deleteArgs,
-                                                files,
-                                                password());
-
-    return runProcess(m_param.value(DeleteProgram).toStringList(), args);*/
     return runProcess(m_cliParameters->property("deleteProgram").toString(), m_cliParameters->deleteArgs(filename(),
                                                                                                          files,
                                                                                                          password()));
