@@ -157,6 +157,7 @@ public:
     virtual QString multiVolumeName() const;
     void setMultiVolume(bool value);
     int numberOfEntries() const;
+    QMimeType mimetype() const;
 
 signals:
     void cancelled();
@@ -185,6 +186,7 @@ protected:
 
 private:
     QString m_filename;
+    QMimeType m_mimetype;
     QString m_password;
     bool m_waitForFinishedSignal;
     bool m_isHeaderEncryptionEnabled;

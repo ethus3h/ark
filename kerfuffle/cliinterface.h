@@ -31,6 +31,7 @@
 
 #include "archiveinterface.h"
 #include "archiveentry.h"
+#include "cliparameters.h"
 #include "kerfuffle_export.h"
 #include "part/archivemodel.h"
 
@@ -316,10 +317,21 @@ public:
 
     virtual void resetParsing() = 0;
     virtual ParameterList parameterList() const = 0;
+    virtual void setupCliParameters(CliParameters *params) = 0;
     virtual bool readListLine(const QString &line) = 0;
     bool doKill() Q_DECL_OVERRIDE;
     bool doSuspend() Q_DECL_OVERRIDE;
     bool doResume() Q_DECL_OVERRIDE;
+
+    /**
+     * Performs any additional escaping and processing on @p fileName
+     * before passing it to the underlying process.
+     *
+     * The default implementation returns @p fileName unchanged.
+     *
+     * @param fileName String to escape.
+     */
+    virtual QString escapeFileName(const QString &fileName) const;
 
     /**
      * Sets if the listing should include empty lines.
@@ -334,41 +346,10 @@ public:
      */
     bool moveToDestination(const QDir &tempDir, const QDir &destDir, bool preservePaths);
 
-    QStringList substituteListVariables(const QStringList &listArgs, const QString &password);
-    QStringList substituteExtractVariables(const QStringList &extractArgs, const QVector<Archive::Entry*> &entries, bool preservePaths, const QString &password);
-    QStringList substituteAddVariables(const QStringList &addArgs, const QVector<Archive::Entry*> &entries, const QString &password, bool encryptHeader, int compLevel, ulong volumeSize, QString compMethod);
-    QStringList substituteMoveVariables(const QStringList &moveArgs, const QVector<Archive::Entry*> &entriesWithoutChildren, const Archive::Entry *destination, const QString &password);
-    QStringList substituteDeleteVariables(const QStringList &deleteArgs, const QVector<Archive::Entry*> &entries, const QString &password);
-    QStringList substituteCommentVariables(const QStringList &commentArgs, const QString &commentFile);
-    QStringList substituteTestVariables(const QStringList &testArgs, const QString &password);
-
     /**
      * @see ArchiveModel::entryPathsFromDestination
      */
     void setNewMovedFiles(const QVector<Archive::Entry*> &entries, const Archive::Entry *destination, int entriesWithoutChildren);
-
-    /**
-     * @return The preserve path switch, according to the @p preservePaths extraction option.
-     */
-    QString preservePathSwitch(bool preservePaths) const;
-
-    /**
-     * @return The password header-switch with the given @p password.
-     */
-    virtual QStringList passwordHeaderSwitch(const QString& password) const;
-
-    /**
-     * @return The password switch with the given @p password.
-     */
-    QStringList passwordSwitch(const QString& password) const;
-
-    /**
-     * @return The compression level switch with the given @p level.
-     */
-    QString compressionLevelSwitch(int level) const;
-
-    virtual QString compressionMethodSwitch(const QString &method) const;
-    QString multiVolumeSwitch(ulong volumeSize) const;
 
     /**
      * @return The list of selected files to extract.
@@ -414,7 +395,7 @@ protected:
      * @return @c true if the program was found and the process was started correctly,
      *         @c false otherwise (in which case finished(false) is emitted).
      */
-    bool runProcess(const QStringList& programNames, const QStringList& arguments);
+    bool runProcess(const QString& programName, const QStringList& arguments);
 
     /**
      * Kill the running process. The finished signal is emitted according to @p emitFinished.
@@ -455,16 +436,6 @@ private:
 
     bool handleFileExistsMessage(const QString& filename);
     bool checkForTestSuccessMessage(const QString& line);
-
-    /**
-     * Performs any additional escaping and processing on @p fileName
-     * before passing it to the underlying process.
-     *
-     * The default implementation returns @p fileName unchanged.
-     *
-     * @param fileName String to escape.
-     */
-    virtual QString escapeFileName(const QString &fileName) const;
 
     /**
      * Returns a list of path pairs which will be supplied to rn command.
@@ -508,6 +479,8 @@ private:
     QTemporaryDir *m_extractTempDir;
     QTemporaryFile *m_commentTempFile;
     QVector<Archive::Entry*> m_extractedFiles;
+
+    CliParameters *m_cliParameters;
 
 protected slots:
     virtual void processFinished(int exitCode, QProcess::ExitStatus exitStatus);

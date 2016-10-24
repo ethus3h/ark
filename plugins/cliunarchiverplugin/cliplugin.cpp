@@ -77,6 +77,10 @@ void CliPlugin::resetParsing()
     m_numberOfVolumes = 0;
 }
 
+void CliPlugin::setupCliParameters(CliParameters *params)
+{
+}
+
 ParameterList CliPlugin::parameterList() const
 {
     static ParameterList p;

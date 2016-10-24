@@ -73,16 +73,22 @@ CliInterface::CliInterface(QObject *parent, const QVariantList & args)
     if (QMetaType::type("QProcess::ExitStatus") == 0) {
         qRegisterMetaType<QProcess::ExitStatus>("QProcess::ExitStatus");
     }
+    m_cliParameters = new CliParameters(this, mimetype());
 }
 
 void CliInterface::cacheParameterList()
 {
+    if (!m_cliParameters->isInitialized()) {
+        setupCliParameters(m_cliParameters);
+    }
+    /*
     m_param = parameterList();
     Q_ASSERT(m_param.contains(ExtractProgram));
     Q_ASSERT(m_param.contains(ListProgram));
     Q_ASSERT(m_param.contains(PreservePathSwitch));
     Q_ASSERT(m_param.contains(FileExistsExpression));
     Q_ASSERT(m_param.contains(FileExistsInput));
+    */
 }
 
 CliInterface::~CliInterface()
@@ -108,9 +114,12 @@ bool CliInterface::list()
     m_operationMode = List;
     m_numberOfEntries = 0;
 
-    const auto args = substituteListVariables(m_param.value(ListArgs).toStringList(), password());
+    //const auto args = substituteListVariables(m_param.value(ListArgs).toStringList(), password());
 
-    if (!runProcess(m_param.value(ListProgram).toStringList(), args)) {
+
+
+    //if (!runProcess(m_param.value(ListProgram).toStringList(), args)) {
+    if (!runProcess(m_cliParameters->property("listProgram").toString(), m_cliParameters->listArgs(filename(), password()))) {
         return false;
     }
 
@@ -126,9 +135,11 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
     m_extractionOptions = options;
     m_extractedFiles = files;
     m_extractDestDir = destinationDirectory;
-    const QStringList extractArgs = m_param.value(ExtractArgs).toStringList();
+    //const QStringList extractArgs = m_param.value(ExtractArgs).toStringList();
 
-    if (extractArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
+
+    //if (extractArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
+    if (options.encryptedArchiveHint() && password().isEmpty()) {
         qCDebug(ARK) << "Password hint enabled, querying user";
         if (!passwordQuery()) {
             return false;
@@ -136,10 +147,13 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
     }
 
     // Populate the argument list.
+    /*
     const QStringList args = substituteExtractVariables(extractArgs,
                                                         files,
                                                         options.preservePaths(),
                                                         password());
+    */
+
 
     QUrl destDir = QUrl(destinationDirectory);
     QDir::setCurrent(destDir.adjusted(QUrl::RemoveScheme).url());
@@ -162,7 +176,11 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
         QDir::setCurrent(destDir.adjusted(QUrl::RemoveScheme).url());
     }
 
-    if (!runProcess(m_param.value(ExtractProgram).toStringList(), args)) {
+    //if (!runProcess(m_param.value(ExtractProgram).toStringList(), args)) {
+    if (!runProcess(m_cliParameters->property("extractProgram").toString(), m_cliParameters->extractArgs(filename(),
+                                                                                                         extractFilesList(files),
+                                                                                                         options.preservePaths(),
+                                                                                                         password()))) {
         return false;
     }
 
@@ -177,7 +195,7 @@ bool CliInterface::addFiles(const QVector<Archive::Entry*> &files, const Archive
 
     m_operationMode = Add;
 
-    const QStringList addArgs = m_param.value(AddArgs).toStringList();
+    //const QStringList addArgs = m_param.value(AddArgs).toStringList();
 
     QVector<Archive::Entry*> filesToPass = QVector<Archive::Entry*>();
     // If destination path is specified, we have recreate its structure inside the temp directory
@@ -223,22 +241,22 @@ bool CliInterface::addFiles(const QVector<Archive::Entry*> &files, const Archive
         filesToPass = files;
     }
 
-    if (addArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
+    //if (addArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
+    if (options.encryptedArchiveHint() && password().isEmpty()) {
         qCDebug(ARK) << "Password hint enabled, querying user";
         if (!passwordQuery()) {
             return false;
         }
     }
 
-    const auto args = substituteAddVariables(m_param.value(AddArgs).toStringList(),
-                                             filesToPass,
-                                             password(),
-                                             isHeaderEncryptionEnabled(),
-                                             options.compressionLevel(),
-                                             options.volumeSize(),
-                                             options.compressionMethod());
-
-    return runProcess(m_param.value(AddProgram).toStringList(), args);
+    qCDebug(ARK) << "pwd:" << password();
+    return runProcess(m_cliParameters->property("addProgram").toString(), m_cliParameters->addArgs(filename(),
+                                                                                                   entryFullPaths(filesToPass, NoTrailingSlash),
+                                                                                                   password(),
+                                                                                                   isHeaderEncryptionEnabled(),
+                                                                                                   options.compressionLevel(),
+                                                                                                   options.compressionMethod(),
+                                                                                                   options.volumeSize()));
 }
 
 bool CliInterface::moveFiles(const QVector<Archive::Entry*> &files, Archive::Entry *destination, const CompressionOptions &options)
@@ -252,11 +270,15 @@ bool CliInterface::moveFiles(const QVector<Archive::Entry*> &files, Archive::Ent
     QVector<Archive::Entry*> withoutChildren = entriesWithoutChildren(files);
     setNewMovedFiles(files, destination, withoutChildren.count());
 
-    const auto moveArgs = m_param.value(MoveArgs).toStringList();
+    //const auto moveArgs = m_param.value(MoveArgs).toStringList();
 
-    const auto args = substituteMoveVariables(moveArgs, withoutChildren, destination, password());
+    //const auto args = substituteMoveVariables(moveArgs, withoutChildren, destination, password());
 
-    return runProcess(m_param.value(MoveProgram).toStringList(), args);
+    //return runProcess(m_param.value(MoveProgram).toStringList(), args);
+    return runProcess(m_cliParameters->property("moveProgram").toString(), m_cliParameters->moveArgs(filename(),
+                                                                                                     withoutChildren,
+                                                                                                     destination,
+                                                                                                     password()));
 }
 
 bool CliInterface::copyFiles(const QVector<Archive::Entry*> &files, Archive::Entry *destination, const CompressionOptions &options)
@@ -283,13 +305,17 @@ bool CliInterface::deleteFiles(const QVector<Archive::Entry*> &files)
 
     m_removedFiles = files;
 
-    const auto deleteArgs = m_param.value(DeleteArgs).toStringList();
+    //const auto deleteArgs = m_param.value(DeleteArgs).toStringList();
 
+    /*
     const auto args = substituteDeleteVariables(deleteArgs,
                                                 files,
                                                 password());
 
-    return runProcess(m_param.value(DeleteProgram).toStringList(), args);
+    return runProcess(m_param.value(DeleteProgram).toStringList(), args);*/
+    return runProcess(m_cliParameters->property("deleteProgram").toString(), m_cliParameters->deleteArgs(filename(),
+                                                                                                         files,
+                                                                                                         password()));
 }
 
 bool CliInterface::testArchive()
@@ -298,25 +324,16 @@ bool CliInterface::testArchive()
     cacheParameterList();
     m_operationMode = Test;
 
-    const auto args = substituteTestVariables(m_param.value(TestArgs).toStringList(), password());
-
-    return runProcess(m_param.value(TestProgram).toStringList(), args);
+    return runProcess(m_cliParameters->property("testProgram").toString(), m_cliParameters->testArgs(filename(), password()));
 }
 
-bool CliInterface::runProcess(const QStringList& programNames, const QStringList& arguments)
+bool CliInterface::runProcess(const QString& programName, const QStringList& arguments)
 {
     Q_ASSERT(!m_process);
 
-    QString programPath;
-    for (int i = 0; i < programNames.count(); i++) {
-        programPath = QStandardPaths::findExecutable(programNames.at(i));
-        if (!programPath.isEmpty())
-            break;
-    }
+    QString programPath = QStandardPaths::findExecutable(programName);
     if (programPath.isEmpty()) {
-        const QString names = programNames.join(QStringLiteral(", "));
-        emit error(xi18ncp("@info", "Failed to locate program <filename>%2</filename> on disk.",
-                           "Failed to locate programs <filename>%2</filename> on disk.", programNames.count(), names));
+        emit error(xi18nc("@info", "Failed to locate program <filename>%2</filename> on disk.", programName));
         emit finished(false);
         return false;
     }
@@ -685,248 +702,6 @@ bool CliInterface::moveToDestination(const QDir &tempDir, const QDir &destDir, b
     return true;
 }
 
-QStringList CliInterface::substituteListVariables(const QStringList &listArgs, const QString &password)
-{
-    // Required if we call this function from unit tests.
-    cacheParameterList();
-
-    QStringList args;
-    foreach (const QString& arg, listArgs) {
-        if (arg == QLatin1String("$Archive")) {
-            args << filename();
-            continue;
-        }
-
-        if (arg == QLatin1String("$PasswordSwitch")) {
-            args << passwordSwitch(password);
-            continue;
-        }
-
-        // Simple argument (e.g. -slt in 7z), nothing to substitute, just add it to the list.
-        args << arg;
-    }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
-QStringList CliInterface::substituteExtractVariables(const QStringList &extractArgs, const QVector<Archive::Entry*> &entries, bool preservePaths, const QString &password)
-{
-    // Required if we call this function from unit tests.
-    cacheParameterList();
-
-    QStringList args;
-    foreach (const QString& arg, extractArgs) {
-        qCDebug(ARK) << "Processing argument" << arg;
-
-        if (arg == QLatin1String("$Archive")) {
-            args << filename();
-            continue;
-        }
-
-        if (arg == QLatin1String("$PreservePathSwitch")) {
-            args << preservePathSwitch(preservePaths);
-            continue;
-        }
-
-        if (arg == QLatin1String("$PasswordSwitch")) {
-            args << passwordSwitch(password);
-            continue;
-        }
-
-        if (arg == QLatin1String("$Files")) {
-            args << extractFilesList(entries);
-            continue;
-        }
-
-        // Simple argument (e.g. -kb in unrar), nothing to substitute, just add it to the list.
-        args << arg;
-    }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
-QStringList CliInterface::substituteAddVariables(const QStringList &addArgs, const QVector<Archive::Entry*> &entries, const QString &password, bool encryptHeader, int compLevel, ulong volumeSize, QString compMethod)
-{
-    // Required if we call this function from unit tests.
-    cacheParameterList();
-
-    QStringList args;
-    foreach (const QString& arg, addArgs) {
-        qCDebug(ARK) << "Processing argument " << arg;
-
-        if (arg == QLatin1String("$Archive")) {
-            args << filename();
-            continue;
-        }
-
-        if (arg == QLatin1String("$PasswordSwitch")) {
-            args << (encryptHeader ? passwordHeaderSwitch(password) : passwordSwitch(password));
-            continue;
-        }
-
-        if (arg == QLatin1String("$CompressionLevelSwitch")) {
-            args << compressionLevelSwitch(compLevel);
-            continue;
-        }
-
-        if (arg == QLatin1String("$CompressionMethodSwitch")) {
-            args << compressionMethodSwitch(compMethod);
-            continue;
-        }
-
-        if (arg == QLatin1String("$MultiVolumeSwitch")) {
-            args << multiVolumeSwitch(volumeSize);
-            continue;
-        }
-
-        if (arg == QLatin1String("$Files")) {
-            args << entryFullPaths(entries, NoTrailingSlash);
-            continue;
-        }
-
-        // Simple argument (e.g. a in 7z), nothing to substitute, just add it to the list.
-        args << arg;
-    }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
-QStringList CliInterface::substituteMoveVariables(const QStringList &moveArgs, const QVector<Archive::Entry*> &entriesWithoutChildren, const Archive::Entry *destination, const QString &password)
-{
-    // Required if we call this function from unit tests.
-    cacheParameterList();
-
-    QStringList args;
-        foreach (const QString& arg, moveArgs) {
-            qCDebug(ARK) << "Processing argument " << arg;
-
-            if (arg == QLatin1String("$Archive")) {
-                args << filename();
-                continue;
-            }
-
-            if (arg == QLatin1String("$PasswordSwitch")) {
-                args << passwordSwitch(password);
-                continue;
-            }
-
-            if (arg == QLatin1String("$PathPairs")) {
-                args << entryPathDestinationPairs(entriesWithoutChildren, destination);
-                continue;
-            }
-
-            // Simple argument (e.g. a in 7z), nothing to substitute, just add it to the list.
-            args << arg;
-        }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
-QStringList CliInterface::substituteDeleteVariables(const QStringList &deleteArgs, const QVector<Archive::Entry*> &entries, const QString &password)
-{
-    cacheParameterList();
-
-    QStringList args;
-    foreach (const QString& arg, deleteArgs) {
-        qCDebug(ARK) << "Processing argument" << arg;
-
-        if (arg == QLatin1String("$Archive")) {
-            args << filename();
-            continue;
-        }
-
-        if (arg == QLatin1String("$PasswordSwitch")) {
-            args << passwordSwitch(password);
-            continue;
-        }
-
-        if (arg == QLatin1String("$Files")) {
-            foreach (const Archive::Entry *e, entries) {
-                args << escapeFileName(e->fullPath(NoTrailingSlash));
-            }
-            continue;
-        }
-
-        // Simple argument (e.g. d in rar), nothing to substitute, just add it to the list.
-        args << arg;
-    }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
-QStringList CliInterface::substituteCommentVariables(const QStringList &commentArgs, const QString &commentFile)
-{
-    // Required if we call this function from unit tests.
-    cacheParameterList();
-
-    QStringList args;
-    foreach (const QString& arg, commentArgs) {
-        qCDebug(ARK) << "Processing argument " << arg;
-
-        if (arg == QLatin1String("$Archive")) {
-            args << filename();
-            continue;
-        }
-
-        if (arg == QLatin1String("$CommentSwitch")) {
-            QString commentSwitch = m_param.value(CommentSwitch).toString();
-            commentSwitch.replace(QStringLiteral("$CommentFile"), commentFile);
-            args << commentSwitch;
-            continue;
-        }
-
-        args << arg;
-    }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
-QStringList CliInterface::substituteTestVariables(const QStringList &testArgs, const QString &password)
-{
-    // Required if we call this function from unit tests.
-    cacheParameterList();
-
-    QStringList args;
-    foreach (const QString& arg, testArgs) {
-        qCDebug(ARK) << "Processing argument " << arg;
-
-        if (arg == QLatin1String("$Archive")) {
-            args << filename();
-            continue;
-        }
-
-        if (arg == QLatin1String("$PasswordSwitch")) {
-            args << passwordSwitch(password);
-            continue;
-        }
-
-        args << arg;
-    }
-
-    // Remove empty strings, if any.
-    args.removeAll(QString());
-
-    return args;
-}
-
 void CliInterface::setNewMovedFiles(const QVector<Archive::Entry*> &entries, const Archive::Entry *destination, int entriesWithoutChildren)
 {
     m_newMovedFiles.clear();
@@ -969,104 +744,6 @@ void CliInterface::setNewMovedFiles(const QVector<Archive::Entry*> &entries, con
         newEntry->setFullPath(newPath);
         m_newMovedFiles << newEntry;
     }
-}
-
-QString CliInterface::preservePathSwitch(bool preservePaths) const
-{
-    Q_ASSERT(m_param.contains(PreservePathSwitch));
-    const QStringList theSwitch = m_param.value(PreservePathSwitch).toStringList();
-    Q_ASSERT(theSwitch.size() == 2);
-
-    return (preservePaths ? theSwitch.at(0) : theSwitch.at(1));
-}
-
-QStringList CliInterface::passwordHeaderSwitch(const QString& password) const
-{
-    if (password.isEmpty()) {
-        return QStringList();
-    }
-
-    Q_ASSERT(m_param.contains(PasswordHeaderSwitch));
-
-    QStringList passwordHeaderSwitch = m_param.value(PasswordHeaderSwitch).toStringList();
-    Q_ASSERT(!passwordHeaderSwitch.isEmpty() && passwordHeaderSwitch.size() <= 2);
-
-    if (passwordHeaderSwitch.size() == 1) {
-        passwordHeaderSwitch[0].replace(QLatin1String("$Password"), password);
-    } else {
-        passwordHeaderSwitch[1] = password;
-    }
-
-    return passwordHeaderSwitch;
-}
-
-QStringList CliInterface::passwordSwitch(const QString& password) const
-{
-    if (password.isEmpty()) {
-        return QStringList();
-    }
-
-    Q_ASSERT(m_param.contains(PasswordSwitch));
-
-    QStringList passwordSwitch = m_param.value(PasswordSwitch).toStringList();
-    Q_ASSERT(!passwordSwitch.isEmpty() && passwordSwitch.size() <= 2);
-
-    if (passwordSwitch.size() == 1) {
-        passwordSwitch[0].replace(QLatin1String("$Password"), password);
-    } else {
-        passwordSwitch[1] = password;
-    }
-
-    return passwordSwitch;
-}
-
-QString CliInterface::compressionLevelSwitch(int level) const
-{
-    if (level < 0 || level > 9) {
-        return QString();
-    }
-
-    Q_ASSERT(m_param.contains(CompressionLevelSwitch));
-
-    QString compLevelSwitch = m_param.value(CompressionLevelSwitch).toString();
-    Q_ASSERT(!compLevelSwitch.isEmpty());
-
-    compLevelSwitch.replace(QLatin1String("$CompressionLevel"), QString::number(level));
-
-    return compLevelSwitch;
-}
-
-QString CliInterface::compressionMethodSwitch(const QString &method) const
-{
-    if (method.isEmpty()) {
-        return QString();
-    }
-
-    Q_ASSERT(m_param.contains(CompressionMethodSwitch));
-    QString compMethodSwitch = m_param.value(CompressionMethodSwitch).toString();
-    Q_ASSERT(!compMethodSwitch.isEmpty());
-
-    compMethodSwitch.replace(QLatin1String("$CompressionMethod"), method);
-
-    return compMethodSwitch;
-}
-
-QString CliInterface::multiVolumeSwitch(ulong volumeSize) const
-{
-    // The maximum value we allow in the QDoubleSpinBox is 1000MB. Converted to
-    // KB this is 1024000.
-    if (volumeSize <= 0 || volumeSize > 1024000) {
-        return QString();
-    }
-
-    Q_ASSERT(m_param.contains(MultiVolumeSwitch));
-
-    QString multiVolumeSwitch = m_param.value(MultiVolumeSwitch).toString();
-    Q_ASSERT(!multiVolumeSwitch.isEmpty());
-
-    multiVolumeSwitch.replace(QLatin1String("$VolumeSize"), QString::number(volumeSize));
-
-    return multiVolumeSwitch;
 }
 
 QStringList CliInterface::extractFilesList(const QVector<Archive::Entry*> &entries) const
@@ -1523,10 +1200,7 @@ bool CliInterface::addComment(const QString &comment)
     stream << comment << endl;
     m_commentTempFile->close();
 
-    const auto args = substituteCommentVariables(m_param.value(CommentArgs).toStringList(),
-                                                 m_commentTempFile->fileName());
-
-    if (!runProcess(m_param.value(AddProgram).toStringList(), args)) {
+    if (!runProcess(m_cliParameters->property("addProgram").toString(), m_cliParameters->commentArgs(filename(), m_commentTempFile->fileName()))) {
         return false;
     }
     m_comment = comment;

@@ -26,6 +26,7 @@
 #define CLIPLUGIN_H
 
 #include "kerfuffle/cliinterface.h"
+#include "kerfuffle/cliparameters.h"
 
 class CliPlugin : public Kerfuffle::CliInterface
 {
@@ -37,9 +38,10 @@ public:
 
     virtual void resetParsing() Q_DECL_OVERRIDE;
     virtual Kerfuffle::ParameterList parameterList() const Q_DECL_OVERRIDE;
+    virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
 
-    virtual QString compressionMethodSwitch(const QString &method) const Q_DECL_OVERRIDE;
+    //virtual QString compressionMethodSwitch(const QString &method) const Q_DECL_OVERRIDE;
 
 private:
 

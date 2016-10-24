@@ -28,6 +28,7 @@
 
 #include "archiveinterface.h"
 #include "ark_debug.h"
+#include "mimetypes.h"
 
 #include <kfileitem.h>
 
@@ -48,6 +49,7 @@ ReadOnlyArchiveInterface::ReadOnlyArchiveInterface(QObject *parent, const QVaria
 {
     qCDebug(ARK) << "Created read-only interface for" << args.first().toString();
     m_filename = args.first().toString();
+    m_mimetype = determineMimeType(m_filename);
     connect(this, &ReadOnlyArchiveInterface::entry, this, &ReadOnlyArchiveInterface::onEntry);
 }
 
@@ -252,6 +254,11 @@ QStringList ReadOnlyArchiveInterface::entryPathsFromDestination(QStringList entr
 bool ReadOnlyArchiveInterface::isHeaderEncryptionEnabled() const
 {
     return m_isHeaderEncryptionEnabled;
+}
+
+QMimeType ReadOnlyArchiveInterface::mimetype() const
+{
+    return m_mimetype;
 }
 
 bool ReadWriteArchiveInterface::isReadOnly() const
