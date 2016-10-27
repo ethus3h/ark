@@ -30,6 +30,8 @@
 #include "archiveinterface.h"
 #include "kerfuffle_export.h"
 
+#include <QRegularExpression>
+
 namespace Kerfuffle
 {
 
@@ -59,7 +61,19 @@ class KERFUFFLE_EXPORT CliParameters: public QObject
     Q_PROPERTY(QHash<QString,QVariant> compressionMethodSwitch MEMBER m_compressionMethodSwitch)
     Q_PROPERTY(QString multiVolumeSwitch MEMBER m_multiVolumeSwitch)
 
-    Q_PROPERTY(bool escapeFileNames MEMBER m_escapeFileNames)
+    Q_PROPERTY(QStringList passwordPromptPatterns MEMBER m_passwordPromptPatterns)
+    Q_PROPERTY(QStringList wrongPasswordPatterns MEMBER m_wrongPasswordPatterns)
+    Q_PROPERTY(QStringList testPassedPatterns MEMBER m_testPassedPatterns)
+    Q_PROPERTY(QStringList fileExistsPatterns MEMBER m_fileExistsPatterns)
+    Q_PROPERTY(QStringList fileExistsFileName MEMBER m_fileExistsFileName)
+    Q_PROPERTY(QStringList extractionFailedPatterns MEMBER m_extractionFailedPatterns)
+    Q_PROPERTY(QStringList corruptArchivePatterns MEMBER m_corruptArchivePatterns)
+    Q_PROPERTY(QStringList diskFullPatterns MEMBER m_diskFullPatterns)
+
+    Q_PROPERTY(QStringList fileExistsInput MEMBER m_fileExistsInput)
+    Q_PROPERTY(QStringList multiVolumeSuffix MEMBER m_multiVolumeSuffix)
+
+    Q_PROPERTY(bool captureProgress MEMBER m_captureProgress)
 
 public:
     explicit CliParameters(QObject *parent, const QMimeType &archiveType);
@@ -79,6 +93,15 @@ public:
     QStringList listArgs(const QString &archive, const QString &password);
     QStringList moveArgs(const QString &archive, const QVector<Archive::Entry *> &entries, Archive::Entry *destination, const QString &password);
     QStringList testArgs(const QString &archive, const QString &password);
+
+    bool isPasswordPrompt(const QString &line);
+    bool isWrongPasswordMsg(const QString &line);
+    bool isTestPassedMsg(const QString &line);
+    bool isfileExistsMsg(const QString &line);
+    bool isFileExistsFileName(const QString &line);
+    bool isExtractionFailedMsg(const QString &line);
+    bool isCorruptArchiveMsg(const QString &line);
+    bool isDiskFullMsg(const QString &line);
 
 protected:
 
@@ -112,8 +135,22 @@ private:
     QHash<QString,QVariant> m_compressionMethodSwitch;
     QString m_multiVolumeSwitch;
 
+    QStringList m_passwordPromptPatterns;
+    QStringList m_wrongPasswordPatterns;
+    QStringList m_testPassedPatterns;
+    QStringList m_fileExistsPatterns;
+    QStringList m_fileExistsFileName;
+    QStringList m_extractionFailedPatterns;
+    QStringList m_corruptArchivePatterns;
+    QStringList m_diskFullPatterns;
+
+    QStringList m_fileExistsInput;
+    QStringList m_multiVolumeSuffix;
+
+    bool m_captureProgress;
+
     QMimeType m_mimeType;
-    bool m_escapeFileNames;
+
 };
 }
 

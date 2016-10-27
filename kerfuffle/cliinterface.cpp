@@ -81,14 +81,9 @@ void CliInterface::cacheParameterList()
     if (!m_cliParameters->isInitialized()) {
         setupCliParameters(m_cliParameters);
     }
-    /*
-    m_param = parameterList();
-    Q_ASSERT(m_param.contains(ExtractProgram));
-    Q_ASSERT(m_param.contains(ListProgram));
-    Q_ASSERT(m_param.contains(PreservePathSwitch));
-    Q_ASSERT(m_param.contains(FileExistsExpression));
-    Q_ASSERT(m_param.contains(FileExistsInput));
-    */
+
+    Q_ASSERT(!m_cliParameters->property("listProgram").toString().isEmpty());
+    Q_ASSERT(!m_cliParameters->property("extractProgram").toString().isEmpty());
 }
 
 CliInterface::~CliInterface()
@@ -808,14 +803,14 @@ void CliInterface::readStdout(bool handleAll)
     // TODO: The same check methods are called in handleLine(), this
     //       is suboptimal.
 
-    bool wrongPasswordMessage = checkForErrorMessage(QLatin1String( lines.last() ), WrongPasswordPatterns);
+    bool wrongPasswordMessage = m_cliParameters->isWrongPasswordMsg(QLatin1String(lines.last()));
 
     bool foundErrorMessage =
         (wrongPasswordMessage ||
-         checkForErrorMessage(QLatin1String(lines.last()), DiskFullPatterns) ||
-         checkForErrorMessage(QLatin1String(lines.last()), ExtractionFailedPatterns) ||
-         checkForPasswordPromptMessage(QLatin1String(lines.last())) ||
-         checkForErrorMessage(QLatin1String(lines.last()), FileExistsExpression));
+         m_cliParameters->isDiskFullMsg(QLatin1String(lines.last())) ||
+         m_cliParameters->isExtractionFailedMsg(QLatin1String(lines.last())) ||
+         m_cliParameters->isfileExistsMsg(QLatin1String(lines.last()))) ||
+         m_cliParameters->isPasswordPrompt(QLatin1String(lines.last()));
 
     if (foundErrorMessage) {
         handleAll = true;
@@ -871,7 +866,7 @@ bool CliInterface::handleLine(const QString& line)
 {
     // TODO: This should be implemented by each plugin; the way progress is
     //       shown by each CLI application is subject to a lot of variation.
-    if ((m_operationMode == Extract || m_operationMode == Add) && m_param.contains(CaptureProgress) && m_param.value(CaptureProgress).toBool()) {
+    if ((m_operationMode == Extract || m_operationMode == Add) && m_cliParameters->property("captureProgress").toBool()) {
         //read the percentage
         int pos = line.indexOf(QLatin1Char( '%' ));
         if (pos > 1) {
@@ -883,7 +878,7 @@ bool CliInterface::handleLine(const QString& line)
 
     if (m_operationMode == Extract) {
 
-        if (checkForPasswordPromptMessage(line)) {
+        if (m_cliParameters->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Found a password prompt";
 
             Kerfuffle::PasswordNeededQuery query(filename());
@@ -903,20 +898,20 @@ bool CliInterface::handleLine(const QString& line)
             return true;
         }
 
-        if (checkForErrorMessage(line, DiskFullPatterns)) {
+        if (m_cliParameters->isDiskFullMsg(line)) {
             qCWarning(ARK) << "Found disk full message:" << line;
             emit error(i18nc("@info", "Extraction failed because the disk is full."));
             return false;
         }
 
-        if (checkForErrorMessage(line, WrongPasswordPatterns)) {
+        if (m_cliParameters->isWrongPasswordMsg(line)) {
             qCWarning(ARK) << "Wrong password!";
             setPassword(QString());
             emit error(i18nc("@info", "Extraction failed: Incorrect password"));
             return false;
         }
 
-        if (checkForErrorMessage(line, ExtractionFailedPatterns)) {
+        if (m_cliParameters->isExtractionFailedMsg(line)) {
             qCWarning(ARK) << "Error in extraction:" << line;
             emit error(i18n("Extraction failed because of an unexpected error."));
             return false;
@@ -928,7 +923,7 @@ bool CliInterface::handleLine(const QString& line)
     }
 
     if (m_operationMode == List) {
-        if (checkForPasswordPromptMessage(line)) {
+        if (m_cliParameters->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Found a password prompt";
 
             Kerfuffle::PasswordNeededQuery query(filename());
@@ -948,20 +943,20 @@ bool CliInterface::handleLine(const QString& line)
             return true;
         }
 
-        if (checkForErrorMessage(line, WrongPasswordPatterns)) {
+        if (m_cliParameters->isWrongPasswordMsg(line)) {
             qCWarning(ARK) << "Wrong password!";
             setPassword(QString());
             emit error(i18n("Incorrect password."));
             return false;
         }
 
-        if (checkForErrorMessage(line, ExtractionFailedPatterns)) {
+        if (m_cliParameters->isExtractionFailedMsg(line)) {
             qCWarning(ARK) << "Error in extraction!!";
             emit error(i18n("Extraction failed because of an unexpected error."));
             return false;
         }
 
-        if (checkForErrorMessage(line, CorruptArchivePatterns)) {
+        if (m_cliParameters->isCorruptArchiveMsg(line)) {
             qCWarning(ARK) << "Archive corrupt";
             setCorrupt(true);
             // Special case: corrupt is not a "fatal" error so we return true here.
@@ -977,14 +972,14 @@ bool CliInterface::handleLine(const QString& line)
 
     if (m_operationMode == Test) {
 
-        if (checkForPasswordPromptMessage(line)) {
+        if (m_cliParameters->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Found a password prompt";
 
             emit error(i18n("Ark does not currently support testing this archive."));
             return false;
         }
 
-        if (checkForTestSuccessMessage(line)) {
+        if (m_cliParameters->isTestPassedMsg(line)) {
             qCDebug(ARK) << "Test successful";
             emit testSuccess();
             return true;
@@ -994,28 +989,12 @@ bool CliInterface::handleLine(const QString& line)
     return true;
 }
 
-bool CliInterface::checkForPasswordPromptMessage(const QString& line)
-{
-    const QString passwordPromptPattern(m_param.value(PasswordPromptPattern).toString());
-
-    if (passwordPromptPattern.isEmpty())
-        return false;
-
-    if (m_passwordPromptPattern.pattern().isEmpty()) {
-        m_passwordPromptPattern.setPattern(m_param.value(PasswordPromptPattern).toString());
-    }
-
-    if (m_passwordPromptPattern.match(line).hasMatch()) {
-        return true;
-    }
-
-    return false;
-}
-
 bool CliInterface::handleFileExistsMessage(const QString& line)
 {
+    qCDebug(ARK) << "line:" << line;
+
     // Check for a filename and store it.
-    foreach (const QString &pattern, m_param.value(FileExistsFileName).toStringList()) {
+    foreach (const QString &pattern, m_cliParameters->property("fileExistsFileName").toStringList()) {
         const QRegularExpression rxFileNamePattern(pattern);
         const QRegularExpressionMatch rxMatch = rxFileNamePattern.match(line);
 
@@ -1025,7 +1004,7 @@ bool CliInterface::handleFileExistsMessage(const QString& line)
         }
     }
 
-    if (!checkForErrorMessage(line, FileExistsExpression)) {
+    if (!m_cliParameters->isfileExistsMsg(line)) {
         return false;
     }
 
@@ -1038,7 +1017,7 @@ bool CliInterface::handleFileExistsMessage(const QString& line)
     qCDebug(ARK) << "Finished response";
 
     QString responseToProcess;
-    const QStringList choices = m_param.value(FileExistsInput).toStringList();
+    const QStringList choices = m_cliParameters->property("fileExistsInput").toStringList();
 
     if (query.responseOverwrite()) {
         responseToProcess = choices.at(0);
@@ -1062,41 +1041,6 @@ bool CliInterface::handleFileExistsMessage(const QString& line)
     writeToProcess(responseToProcess.toLocal8Bit());
 
     return true;
-}
-
-bool CliInterface::checkForErrorMessage(const QString& line, int parameterIndex)
-{
-    QList<QRegularExpression> patterns;
-
-    if (m_patternCache.contains(parameterIndex)) {
-        patterns = m_patternCache.value(parameterIndex);
-    } else {
-        if (!m_param.contains(parameterIndex)) {
-            return false;
-        }
-
-        foreach(const QString& rawPattern, m_param.value(parameterIndex).toStringList()) {
-            patterns << QRegularExpression(rawPattern);
-        }
-        m_patternCache[parameterIndex] = patterns;
-    }
-
-    foreach(const QRegularExpression& pattern, patterns) {
-        if (pattern.match(line).hasMatch()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CliInterface::checkForTestSuccessMessage(const QString& line)
-{
-    const QRegularExpression rx(m_param.value(TestPassedPattern).toString());
-    const QRegularExpressionMatch rxMatch = rx.match(line);
-    if (rxMatch.hasMatch()) {
-        return true;
-    }
-    return false;
 }
 
 bool CliInterface::doKill()
@@ -1180,7 +1124,7 @@ QString CliInterface::multiVolumeName() const
     QString oldSuffix = QMimeDatabase().suffixForFileName(filename());
     QString name;
 
-    foreach (const QString &multiSuffix, m_param.value(MultiVolumeSuffix).toStringList()) {
+    foreach (const QString &multiSuffix, m_cliParameters->property("multiVolumeSuffix").toStringList()) {
         QString newSuffix = multiSuffix;
         newSuffix.replace(QStringLiteral("$Suffix"), oldSuffix);
         name = filename().remove(oldSuffix).append(newSuffix);

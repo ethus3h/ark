@@ -82,6 +82,8 @@ void CliPlugin::setupCliParameters(CliParameters *params)
 {
     qCDebug(ARK) << "Setting up parameters...";
 
+    params->setProperty("captureProgress", false);
+
     params->setProperty("addProgram", QStringLiteral("zip"));
     params->setProperty("addSwitch", QStringList({QStringLiteral("-r")}));
 
@@ -105,31 +107,20 @@ void CliPlugin::setupCliParameters(CliParameters *params)
     params->setProperty("compressionMethodSwitch", QHash<QString,QVariant>{{QStringLiteral("application/zip"), QStringLiteral("-Z$CompressionMethod")},
                                                                            {QStringLiteral("application/x-java-archive"), QStringLiteral("-Z$CompressionMethod")}});
     params->setProperty("multiVolumeSwitch", QStringLiteral("-v$VolumeSizek"));
-}
 
-ParameterList CliPlugin::parameterList() const
-{
-    static ParameterList p;
-
-    if (p.isEmpty()) {
-        p[CaptureProgress] = false;
-
-        p[FileExistsExpression] = QStringList()
-            << QStringLiteral("^replace (.+)\\? \\[y\\]es, \\[n\\]o, \\[A\\]ll, \\[N\\]one, \\[r\\]ename: $");
-        p[FileExistsFileName] = QStringList() << p[FileExistsExpression].toString();
-        p[FileExistsInput] = QStringList() << QStringLiteral("y")  //overwrite
-                                           << QStringLiteral("n")  //skip
-                                           << QStringLiteral("A")  //overwrite all
-                                           << QStringLiteral("N"); //autoskip
-        p[PasswordPromptPattern] = QStringLiteral(" password: ");
-        p[WrongPasswordPatterns] = QStringList() << QStringLiteral("incorrect password");
-        p[ExtractionFailedPatterns] = QStringList() << QStringLiteral("unsupported compression method");
-        p[CorruptArchivePatterns] = QStringList() << QStringLiteral("End-of-central-directory signature not found");
-        p[DiskFullPatterns] = QStringList() << QStringLiteral("write error \\(disk full\\?\\)")
-                                            << QStringLiteral("No space left on device");
-        p[TestPassedPattern] = QStringLiteral("^No errors detected in compressed data of ");
-    }
-    return p;
+    params->setProperty("passwordPromptPatterns", QStringList{QStringLiteral(" password: ")});
+    params->setProperty("wrongPasswordPatterns", QStringList{QStringLiteral("incorrect password")});
+    params->setProperty("testPassedPatterns", QStringList{QStringLiteral("^No errors detected in compressed data of ")});
+    params->setProperty("fileExistsPatterns", QStringList{QStringLiteral("^replace (.+)\\? \\[y\\]es, \\[n\\]o, \\[A\\]ll, \\[N\\]one, \\[r\\]ename: $")});
+    params->setProperty("fileExistsFileName", QStringList{QStringLiteral("^replace (.+)\\? \\[y\\]es, \\[n\\]o, \\[A\\]ll, \\[N\\]one, \\[r\\]ename: $")});
+    params->setProperty("fileExistsInput", QStringList{QStringLiteral("y"),   //Overwrite
+                                                       QStringLiteral("n"),   //Skip
+                                                       QStringLiteral("A"),   //Overwrite all
+                                                       QStringLiteral("N")}); //Autoskip
+    params->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("unsupported compression method")});
+    params->setProperty("corruptArchivePatterns", QStringList{QStringLiteral("End-of-central-directory signature not found")});
+    params->setProperty("diskFullPatterns", QStringList{QStringLiteral("write error \\(disk full\\?\\)"),
+                                                        QStringLiteral("No space left on device")});
 }
 
 bool CliPlugin::readListLine(const QString &line)

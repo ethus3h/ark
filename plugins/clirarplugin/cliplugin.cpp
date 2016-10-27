@@ -67,6 +67,8 @@ void CliPlugin::setupCliParameters(CliParameters *params)
 {
     qCDebug(ARK) << "Setting up parameters...";
 
+    params->setProperty("captureProgress", true);
+
     params->setProperty("addProgram", QStringLiteral("rar"));
     params->setProperty("addSwitch", QStringList({QStringLiteral("a")}));
 
@@ -101,38 +103,30 @@ void CliPlugin::setupCliParameters(CliParameters *params)
     params->setProperty("compressionMethodSwitch", QHash<QString,QVariant>{{QStringLiteral("application/vnd.rar"), QStringLiteral("-ma$CompressionMethod")},
                                                                            {QStringLiteral("application/x-rar"), QStringLiteral("-ma$CompressionMethod")}});
     params->setProperty("multiVolumeSwitch", QStringLiteral("-v$VolumeSizek"));
-}
 
-ParameterList CliPlugin::parameterList() const
-{
-    static ParameterList p;
 
-    if (p.isEmpty()) {
-        p[CaptureProgress] = true;
-        p[FileExistsExpression] = QStringList()
-                                << QStringLiteral("^\\[Y\\]es, \\[N\\]o, \\[A\\]ll, n\\[E\\]ver, \\[R\\]ename, \\[Q\\]uit $");
-        p[FileExistsFileName] = QStringList() << QStringLiteral("^(.+) already exists. Overwrite it")  // unrar 3 & 4
-                                              << QStringLiteral("^Would you like to replace the existing file (.+)$"); // unrar 5
-        p[FileExistsInput] = QStringList() << QStringLiteral("Y")  //overwrite
-                                           << QStringLiteral("N")  //skip
-                                           << QStringLiteral("A")  //overwrite all
-                                           << QStringLiteral("E")  //autoskip
-                                           << QStringLiteral("Q"); //cancel
-        p[PasswordPromptPattern] = QLatin1String("Enter password \\(will not be echoed\\) for");
-        p[WrongPasswordPatterns] = QStringList() << QStringLiteral("password incorrect") << QStringLiteral("wrong password");
-        p[ExtractionFailedPatterns] = QStringList() << QStringLiteral("CRC failed")
-                                                    << QStringLiteral("Cannot find volume");
-        p[CorruptArchivePatterns] = QStringList() << QStringLiteral("Unexpected end of archive")
-                                                  << QStringLiteral("the file header is corrupt");
-        p[DiskFullPatterns] = QStringList() << QStringLiteral("No space left on device");
-        p[TestPassedPattern] = QStringLiteral("^All OK$");
-        // rar will sometimes create multi-volume archives where first volume is
-        // called name.part1.rar and other times name.part01.rar.
-        p[MultiVolumeSuffix] = QStringList() << QStringLiteral("part01.$Suffix")
-                                             << QStringLiteral("part1.$Suffix");
-    }
+    params->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("Enter password \\(will not be echoed\\) for")});
+    params->setProperty("wrongPasswordPatterns", QStringList{QStringLiteral("password incorrect"),
+                                                             QStringLiteral("wrong password")});
+    params->setProperty("testPassedPatterns", QStringList{QStringLiteral("^All OK$")});
+    params->setProperty("fileExistsPatterns", QStringList{QStringLiteral("^\\[Y\\]es, \\[N\\]o, \\[A\\]ll, n\\[E\\]ver, \\[R\\]ename, \\[Q\\]uit $")});
+    params->setProperty("fileExistsFileName", QStringList{QStringLiteral("^(.+) already exists. Overwrite it"),  // unrar 3 & 4
+                                                          QStringLiteral("^Would you like to replace the existing file (.+)$")}); // unrar 5
+    params->setProperty("fileExistsInput", QStringList{QStringLiteral("Y"),   //Overwrite
+                                                       QStringLiteral("N"),   //Skip
+                                                       QStringLiteral("A"),   //Overwrite all
+                                                       QStringLiteral("E"),   //Autoskip
+                                                       QStringLiteral("Q")}); //Cancel
+    params->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("CRC failed"),
+                                                                QStringLiteral("Cannot find volume")});
+    params->setProperty("corruptArchivePatterns", QStringList{QStringLiteral("Unexpected end of archive"),
+                                                              QStringLiteral("the file header is corrupt")});
+    params->setProperty("diskFullPatterns", QStringList{QStringLiteral("No space left on device")});
 
-    return p;
+    // rar will sometimes create multi-volume archives where first volume is
+    // called name.part1.rar and other times name.part01.rar.
+    params->setProperty("multiVolumeSuffix", QStringList{QStringLiteral("part01.$Suffix"),
+                                                         QStringLiteral("part1.$Suffix")});
 }
 
 bool CliPlugin::readListLine(const QString &line)

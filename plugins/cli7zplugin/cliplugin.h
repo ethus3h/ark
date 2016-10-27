@@ -38,7 +38,6 @@ public:
     virtual ~CliPlugin();
 
     virtual void resetParsing() Q_DECL_OVERRIDE;
-    virtual Kerfuffle::ParameterList parameterList() const Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
     virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
 

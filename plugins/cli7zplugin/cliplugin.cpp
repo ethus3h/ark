@@ -61,6 +61,8 @@ void CliPlugin::setupCliParameters(CliParameters *params)
 {
     qCDebug(ARK) << "Setting up parameters...";
 
+    params->setProperty("captureProgress", false);
+
     params->setProperty("addProgram", QStringLiteral("7z"));
     params->setProperty("addSwitch", QStringList{QStringLiteral("a"),
                                                  QStringLiteral("-l")});
@@ -89,36 +91,27 @@ void CliPlugin::setupCliParameters(CliParameters *params)
     params->setProperty("compressionMethodSwitch", QHash<QString,QVariant>{{QStringLiteral("application/x-7z-compressed"), QStringLiteral("-m0=$CompressionMethod")},
                                                                            {QStringLiteral("application/zip"), QStringLiteral("-mm=$CompressionMethod")}});
     params->setProperty("multiVolumeSwitch", QStringLiteral("-v$VolumeSizek"));
-}
 
-ParameterList CliPlugin::parameterList() const
-{
-    static ParameterList p;
 
-    if (p.isEmpty()) {
-        //p[CaptureProgress] = true;
+    params->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("Enter password \\(will not be echoed\\)")});
+    params->setProperty("wrongPasswordPatterns", QStringList{QStringLiteral("Wrong password")});
+    params->setProperty("testPassedPatterns", QStringList{QStringLiteral("^Everything is Ok$")});
+    params->setProperty("fileExistsPatterns", QStringList{QStringLiteral("^\\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $"),
+                                                          QStringLiteral("^\\? \\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $")});
+    params->setProperty("fileExistsFileName", QStringList{QStringLiteral("^file \\./(.*)$"),
+                                                          QStringLiteral("^  Path:     \\./(.*)$")});
+    params->setProperty("fileExistsInput", QStringList{QStringLiteral("Y"),   //Overwrite
+                                                       QStringLiteral("N"),   //Skip
+                                                       QStringLiteral("A"),   //Overwrite all
+                                                       QStringLiteral("S"),   //Autoskip
+                                                       QStringLiteral("Q")}); //Cancel
+    params->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("ERROR: E_FAIL"),
+                                                                QStringLiteral("Open ERROR: Can not open the file as \\[7z\\] archive")});
+    params->setProperty("corruptArchivePatterns", QStringList{QStringLiteral("Unexpected end of archive"),
+                                                              QStringLiteral("Headers Error")});
+    params->setProperty("diskFullPatterns", QStringList{QStringLiteral("No space left on device")});
+    params->setProperty("multiVolumeSuffix", QStringList{QStringLiteral("$Suffix.001")});
 
-        p[WrongPasswordPatterns] = QStringList() << QStringLiteral("Wrong password");
-        p[TestPassedPattern] = QStringLiteral("^Everything is Ok$");
-        p[FileExistsExpression] = QStringList()
-            << QStringLiteral("^\\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $")
-            << QStringLiteral("^\\? \\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $");
-        p[FileExistsFileName] = QStringList() << QStringLiteral("^file \\./(.*)$")
-                                              << QStringLiteral("^  Path:     \\./(.*)$");
-        p[FileExistsInput] = QStringList() << QStringLiteral("Y")  //overwrite
-                                           << QStringLiteral("N")  //skip
-                                           << QStringLiteral("A")  //overwrite all
-                                           << QStringLiteral("S")  //autoskip
-                                           << QStringLiteral("Q"); //cancel
-        p[PasswordPromptPattern] = QStringLiteral("Enter password \\(will not be echoed\\)");
-        p[ExtractionFailedPatterns] = QStringList() << QStringLiteral("ERROR: E_FAIL") << QStringLiteral("Open ERROR: Can not open the file as \\[7z\\] archive");
-        p[CorruptArchivePatterns] = QStringList() << QStringLiteral("Unexpected end of archive")
-                                                  << QStringLiteral("Headers Error");
-        p[DiskFullPatterns] = QStringList() << QStringLiteral("No space left on device");
-        p[MultiVolumeSuffix] = QStringList() << QStringLiteral("$Suffix.001");
-    }
-
-    return p;
 }
 
 bool CliPlugin::readListLine(const QString& line)

@@ -26,6 +26,7 @@
  */
 
 #include "cliparameters.h"
+#include "ark_debug.h"
 #include "archiveformat.h"
 #include "pluginmanager.h"
 
@@ -35,17 +36,13 @@ namespace Kerfuffle
 CliParameters::CliParameters(QObject *parent, const QMimeType &archiveType)
         : QObject(parent)
         , m_mimeType(archiveType)
-        , m_escapeFileNames(false)
 {
 }
 
 bool CliParameters::isInitialized() const
 {
-    if (m_listProgram.isEmpty()) {
-        return false;
-    } else {
-        return true;
-    }
+    // If listProgram is empty we assume uninitialized state.
+    return !m_listProgram.isEmpty();
 }
 
 QStringList CliParameters::addArgs(const QString &archive, const QStringList &files, const QString &password, bool headerEncryption, int compressionLevel, const QString &compressionMethod, uint volumeSize)
@@ -268,6 +265,86 @@ QString CliParameters::substituteMultiVolumeSwitch(uint volumeSize)
     multiVolumeSwitch.replace(QLatin1String("$VolumeSize"), QString::number(volumeSize));
 
     return multiVolumeSwitch;
+}
+
+bool CliParameters::isPasswordPrompt(const QString &line)
+{
+    foreach(const QString &rx, m_passwordPromptPatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isWrongPasswordMsg(const QString &line)
+{
+    foreach(const QString &rx, m_wrongPasswordPatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isTestPassedMsg(const QString &line)
+{
+    foreach(const QString &rx, m_testPassedPatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isfileExistsMsg(const QString &line)
+{
+    foreach(const QString &rx, m_fileExistsPatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isFileExistsFileName(const QString &line)
+{
+    foreach(const QString &rx, m_fileExistsFileName) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isExtractionFailedMsg(const QString &line)
+{
+    foreach(const QString &rx, m_extractionFailedPatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isCorruptArchiveMsg(const QString &line)
+{
+    foreach(const QString &rx, m_corruptArchivePatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CliParameters::isDiskFullMsg(const QString &line)
+{
+    foreach(const QString &rx, m_diskFullPatterns) {
+        if (QRegularExpression(rx).match(line).hasMatch()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }
