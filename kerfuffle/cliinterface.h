@@ -156,6 +156,7 @@ protected:
     QVector<Archive::Entry*> m_tempAddedFiles;
     Archive::Entry *m_passedDestination;
     CompressionOptions m_passedOptions;
+    CliParameters *m_cliParameters;
 
 #ifdef Q_OS_WIN
     KProcess *m_process;
@@ -214,8 +215,6 @@ private:
     QTemporaryDir *m_extractTempDir;
     QTemporaryFile *m_commentTempFile;
     QVector<Archive::Entry*> m_extractedFiles;
-
-    CliParameters *m_cliParameters;
 
 protected slots:
     virtual void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
