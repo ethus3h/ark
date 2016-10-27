@@ -246,13 +246,11 @@ void Cli7zTest::testListArgs()
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
     QVERIFY(plugin);
 
-    const QStringList listArgs = { QStringLiteral("l"),
-                                   QStringLiteral("-slt"),
-                                   QStringLiteral("$PasswordSwitch"),
-                                   QStringLiteral("$Archive") };
+    plugin->cacheParameterList();
 
     QFETCH(QString, password);
-    const auto replacedArgs = plugin->substituteListVariables(listArgs, password);
+
+    const auto replacedArgs = plugin->m_cliParameters->listArgs(archiveName, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -275,9 +273,10 @@ void Cli7zTest::testAddArgs_data()
             << QString() << false << 5 << QStringLiteral("LZMA2") << 0UL
             << QStringList {
                    QStringLiteral("a"),
-                   QStringLiteral("/tmp/foo.7z"),
+                   QStringLiteral("-l"),
                    QStringLiteral("-mx=5"),
-                   QStringLiteral("-m0=LZMA2")
+                   QStringLiteral("-m0=LZMA2"),
+                   QStringLiteral("/tmp/foo.7z")
                };
 
     QTest::newRow("encrypted")
@@ -285,10 +284,11 @@ void Cli7zTest::testAddArgs_data()
             << QStringLiteral("1234") << false << 5 << QStringLiteral("LZMA2") << 0UL
             << QStringList {
                    QStringLiteral("a"),
-                   QStringLiteral("/tmp/foo.7z"),
+                   QStringLiteral("-l"),
                    QStringLiteral("-p1234"),
                    QStringLiteral("-mx=5"),
-                   QStringLiteral("-m0=LZMA2")
+                   QStringLiteral("-m0=LZMA2"),
+                   QStringLiteral("/tmp/foo.7z")
                };
 
     QTest::newRow("header-encrypted")
@@ -296,11 +296,12 @@ void Cli7zTest::testAddArgs_data()
             << QStringLiteral("1234") << true << 5 << QStringLiteral("LZMA2") << 0UL
             << QStringList {
                    QStringLiteral("a"),
-                   QStringLiteral("/tmp/foo.7z"),
+                   QStringLiteral("-l"),
                    QStringLiteral("-p1234"),
                    QStringLiteral("-mhe=on"),
                    QStringLiteral("-mx=5"),
-                   QStringLiteral("-m0=LZMA2")
+                   QStringLiteral("-m0=LZMA2"),
+                   QStringLiteral("/tmp/foo.7z")
                };
 
     QTest::newRow("multi-volume")
@@ -308,10 +309,11 @@ void Cli7zTest::testAddArgs_data()
             << QString() << false << 5 << QStringLiteral("LZMA2") << 2500UL
             << QStringList {
                    QStringLiteral("a"),
-                   QStringLiteral("/tmp/foo.7z"),
+                   QStringLiteral("-l"),
                    QStringLiteral("-mx=5"),
                    QStringLiteral("-m0=LZMA2"),
-                   QStringLiteral("-v2500k")
+                   QStringLiteral("-v2500k"),
+                   QStringLiteral("/tmp/foo.7z")
                };
 
     QTest::newRow("comp-method-bzip2")
@@ -319,9 +321,10 @@ void Cli7zTest::testAddArgs_data()
             << QString() << false << 5 << QStringLiteral("BZip2") << 0UL
             << QStringList {
                    QStringLiteral("a"),
-                   QStringLiteral("/tmp/foo.7z"),
+                   QStringLiteral("-l"),
                    QStringLiteral("-mx=5"),
-                   QStringLiteral("-m0=BZip2")
+                   QStringLiteral("-m0=BZip2"),
+                   QStringLiteral("/tmp/foo.7z")
                };
 }
 
@@ -331,13 +334,7 @@ void Cli7zTest::testAddArgs()
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
     QVERIFY(plugin);
 
-    const QStringList addArgs = { QStringLiteral("a"),
-                                  QStringLiteral("$Archive"),
-                                  QStringLiteral("$PasswordSwitch"),
-                                  QStringLiteral("$CompressionLevelSwitch"),
-                                  QStringLiteral("$CompressionMethodSwitch"),
-                                  QStringLiteral("$MultiVolumeSwitch"),
-                                  QStringLiteral("$Files") };
+    plugin->cacheParameterList();
 
     QFETCH(QString, password);
     QFETCH(bool, encryptHeader);
@@ -345,7 +342,7 @@ void Cli7zTest::testAddArgs()
     QFETCH(ulong, volumeSize);
     QFETCH(QString, compressionMethod);
 
-    QStringList replacedArgs = plugin->substituteAddVariables(addArgs, {}, password, encryptHeader, compressionLevel, volumeSize, compressionMethod);
+    const auto replacedArgs = plugin->m_cliParameters->addArgs(archiveName, {}, password, encryptHeader, compressionLevel, compressionMethod, volumeSize);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -426,20 +423,22 @@ void Cli7zTest::testExtractArgs()
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
     QVERIFY(plugin);
 
-    const QStringList extractArgs = { QStringLiteral("$PreservePathSwitch"),
-                                      QStringLiteral("$PasswordSwitch"),
-                                      QStringLiteral("$Archive"),
-                                      QStringLiteral("$Files") };
+    plugin->cacheParameterList();
 
     QFETCH(QVector<Archive::Entry*>, files);
+    QStringList filesList;
+    foreach (const Archive::Entry *e, files) {
+        filesList << e->fullPath(NoTrailingSlash);
+    }
+
     QFETCH(bool, preservePaths);
     QFETCH(QString, password);
 
-    QStringList replacedArgs = plugin->substituteExtractVariables(extractArgs, files, preservePaths, password);
-    QVERIFY(replacedArgs.size() >= extractArgs.size());
+    const auto replacedArgs = plugin->m_cliParameters->extractArgs(archiveName, filesList, preservePaths, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
 
     plugin->deleteLater();
 }
+

@@ -111,6 +111,10 @@ public:
 
     QString multiVolumeName() const Q_DECL_OVERRIDE;
 
+    virtual void cacheParameterList();
+
+    CliParameters *m_cliParameters;
+
 protected:
 
     bool setAddedFiles();
@@ -121,8 +125,6 @@ protected:
      * or a canceled user query. If false is returned, the caller is supposed to call killProcess().
      */
     virtual bool handleLine(const QString& line);
-
-    virtual void cacheParameterList();
 
     /**
      * Run @p programName with the given @p arguments.
@@ -156,7 +158,6 @@ protected:
     QVector<Archive::Entry*> m_tempAddedFiles;
     Archive::Entry *m_passedDestination;
     CompressionOptions m_passedOptions;
-    CliParameters *m_cliParameters;
 
 #ifdef Q_OS_WIN
     KProcess *m_process;
