@@ -40,8 +40,6 @@ public:
     virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
 
-    //virtual QString compressionMethodSwitch(const QString &method) const Q_DECL_OVERRIDE;
-
 private:
 
     enum ParseState {

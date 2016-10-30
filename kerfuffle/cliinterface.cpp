@@ -991,8 +991,6 @@ bool CliInterface::handleLine(const QString& line)
 
 bool CliInterface::handleFileExistsMessage(const QString& line)
 {
-    qCDebug(ARK) << "line:" << line;
-
     // Check for a filename and store it.
     foreach (const QString &pattern, m_cliParameters->property("fileExistsFileName").toStringList()) {
         const QRegularExpression rxFileNamePattern(pattern);

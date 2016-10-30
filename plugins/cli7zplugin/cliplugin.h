@@ -41,11 +41,6 @@ public:
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
     virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
 
-    /**
-     * @return The password header-switch with the given @p password.
-     */
-    //virtual QString compressionMethodSwitch(const QString &method) const Q_DECL_OVERRIDE;
-
 private:
     enum ArchiveType {
         ArchiveType7z = 0,

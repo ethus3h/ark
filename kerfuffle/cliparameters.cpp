@@ -243,7 +243,9 @@ QString CliParameters::substituteCompressionMethodSwitch(const QString &method)
     QString compMethodSwitch = m_compressionMethodSwitch[m_mimeType.name()].toString();
     Q_ASSERT(!compMethodSwitch.isEmpty());
 
-    compMethodSwitch.replace(QLatin1String("$CompressionMethod"), method);
+    QString cliMethod = ArchiveFormat::fromMetadata(m_mimeType, metadata).compressionMethods().value(method).toString();
+
+    compMethodSwitch.replace(QLatin1String("$CompressionMethod"), cliMethod);
 
     return compMethodSwitch;
 }
