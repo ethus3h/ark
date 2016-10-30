@@ -51,6 +51,9 @@ ReadOnlyArchiveInterface::ReadOnlyArchiveInterface(QObject *parent, const QVaria
     m_filename = args.first().toString();
     m_mimetype = determineMimeType(m_filename);
     connect(this, &ReadOnlyArchiveInterface::entry, this, &ReadOnlyArchiveInterface::onEntry);
+    Q_ASSERT(args.size() >= 2);
+    m_metaData = args.at(1).value<KPluginMetaData>();
+    qCDebug(ARK) << "this is a:" << m_metaData.name();
 }
 
 ReadOnlyArchiveInterface::~ReadOnlyArchiveInterface()
@@ -146,7 +149,7 @@ QString ReadOnlyArchiveInterface::multiVolumeName() const
     return filename();
 }
 
-ReadWriteArchiveInterface::ReadWriteArchiveInterface(QObject *parent, const QVariantList & args)
+ReadWriteArchiveInterface::ReadWriteArchiveInterface(QObject *parent, const QVariantList &args)
         : ReadOnlyArchiveInterface(parent, args)
 {
     qCDebug(ARK) << "Created read-write interface for" << args.first().toString();

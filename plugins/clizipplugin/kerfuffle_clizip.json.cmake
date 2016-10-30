@@ -58,7 +58,7 @@
         "CompressionLevelDefault": 6, 
         "CompressionLevelMax": 9, 
         "CompressionLevelMin": 0, 
-        "CompressionMethodDefault": "deflate", 
+        "CompressionMethodDefault": "Deflate",
         "CompressionMethods": {
             "BZip2" : "bzip2",
             "Deflate" : "deflate",

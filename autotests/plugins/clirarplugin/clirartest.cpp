@@ -204,7 +204,8 @@ void CliRarTest::testList_data()
 void CliRarTest::testList()
 {
     qRegisterMetaType<Archive::Entry*>("Archive::Entry*");
-    CliPlugin *rarPlugin = new CliPlugin(this, {QStringLiteral("dummy.rar")});
+    CliPlugin *rarPlugin = new CliPlugin(this, {QStringLiteral("dummy.rar"),
+                                                QVariant::fromValue(m_plugin->metaData())});
     QSignalSpy signalSpyEntry(rarPlugin, &CliPlugin::entry);
     QSignalSpy signalSpyCompMethod(rarPlugin, &CliPlugin::compressionMethodFound);
     QSignalSpy signalSpyError(rarPlugin, &CliPlugin::error);
@@ -301,7 +302,8 @@ void CliRarTest::testListArgs_data()
 void CliRarTest::testListArgs()
 {
     QFETCH(QString, archiveName);
-    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
+    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
     plugin->cacheParameterList();
@@ -378,7 +380,8 @@ void CliRarTest::testAddArgs_data()
 void CliRarTest::testAddArgs()
 {
     QFETCH(QString, archiveName);
-    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
+    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
     plugin->cacheParameterList();
@@ -475,7 +478,8 @@ void CliRarTest::testExtractArgs_data()
 void CliRarTest::testExtractArgs()
 {
     QFETCH(QString, archiveName);
-    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
+    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
     plugin->cacheParameterList();

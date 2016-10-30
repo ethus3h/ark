@@ -76,7 +76,7 @@ class KERFUFFLE_EXPORT CliParameters: public QObject
     Q_PROPERTY(bool captureProgress MEMBER m_captureProgress)
 
 public:
-    explicit CliParameters(QObject *parent, const QMimeType &archiveType);
+    explicit CliParameters(QObject *parent, const KPluginMetaData &metaData, const QMimeType &archiveType);
 
     bool isInitialized() const;
 
@@ -150,7 +150,7 @@ private:
     bool m_captureProgress;
 
     QMimeType m_mimeType;
-
+    KPluginMetaData m_metaData;
 };
 }
 

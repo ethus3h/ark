@@ -164,7 +164,8 @@ void Cli7zTest::testList_data()
 void Cli7zTest::testList()
 {
     qRegisterMetaType<Archive::Entry*>("Archive::Entry*");
-    CliPlugin *plugin = new CliPlugin(this, {QStringLiteral("dummy.7z")});
+    CliPlugin *plugin = new CliPlugin(this, {QStringLiteral("dummy.7z"),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QSignalSpy signalSpyEntry(plugin, &CliPlugin::entry);
     QSignalSpy signalSpyCompMethod(plugin, &CliPlugin::compressionMethodFound);
 
@@ -243,7 +244,8 @@ void Cli7zTest::testListArgs_data()
 void Cli7zTest::testListArgs()
 {
     QFETCH(QString, archiveName);
-    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
+    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
     plugin->cacheParameterList();
@@ -331,7 +333,8 @@ void Cli7zTest::testAddArgs_data()
 void Cli7zTest::testAddArgs()
 {
     QFETCH(QString, archiveName);
-    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
+    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
     plugin->cacheParameterList();
@@ -420,7 +423,8 @@ void Cli7zTest::testExtractArgs_data()
 void Cli7zTest::testExtractArgs()
 {
     QFETCH(QString, archiveName);
-    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName)});
+    CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
+                                             QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
     plugin->cacheParameterList();

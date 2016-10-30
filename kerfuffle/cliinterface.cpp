@@ -73,7 +73,7 @@ CliInterface::CliInterface(QObject *parent, const QVariantList & args)
     if (QMetaType::type("QProcess::ExitStatus") == 0) {
         qRegisterMetaType<QProcess::ExitStatus>("QProcess::ExitStatus");
     }
-    m_cliParameters = new CliParameters(this, mimetype());
+    m_cliParameters = new CliParameters(this, m_metaData, mimetype());
 }
 
 void CliInterface::cacheParameterList()

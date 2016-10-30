@@ -33,9 +33,10 @@
 namespace Kerfuffle
 {
 
-CliParameters::CliParameters(QObject *parent, const QMimeType &archiveType)
+CliParameters::CliParameters(QObject *parent, const KPluginMetaData &metaData, const QMimeType &archiveType)
         : QObject(parent)
         , m_mimeType(archiveType)
+        , m_metaData(metaData)
 {
 }
 
@@ -172,8 +173,7 @@ QStringList CliParameters::substituteCommentSwitch(const QString &commentfile)
 {
     Q_ASSERT(!commentfile.isEmpty());
 
-    const KPluginMetaData metadata = PluginManager().preferredPluginFor(m_mimeType)->metaData();
-    Q_ASSERT(ArchiveFormat::fromMetadata(m_mimeType, metadata).supportsWriteComment());
+    Q_ASSERT(ArchiveFormat::fromMetadata(m_mimeType, m_metaData).supportsWriteComment());
 
     QStringList commentSwitches = m_commentSwitch;
     Q_ASSERT(!commentSwitches.isEmpty());
@@ -193,8 +193,7 @@ QStringList CliParameters::substitutePasswordSwitch(const QString &password, boo
         return QStringList();
     }
 
-    const KPluginMetaData metadata = PluginManager().preferredPluginFor(m_mimeType)->metaData();
-    Archive::EncryptionType encryptionType = ArchiveFormat::fromMetadata(m_mimeType, metadata).encryptionType();
+    Archive::EncryptionType encryptionType = ArchiveFormat::fromMetadata(m_mimeType, m_metaData).encryptionType();
     Q_ASSERT(encryptionType != Archive::EncryptionType::Unencrypted);
 
     QStringList passwordSwitch;
@@ -220,8 +219,7 @@ QString CliParameters::substituteCompressionLevelSwitch(int level)
         return QString();
     }
 
-    const KPluginMetaData metadata = PluginManager().preferredPluginFor(m_mimeType)->metaData();
-    Q_ASSERT(ArchiveFormat::fromMetadata(m_mimeType, metadata).maxCompressionLevel() != -1);
+    Q_ASSERT(ArchiveFormat::fromMetadata(m_mimeType, m_metaData).maxCompressionLevel() != -1);
 
     QString compLevelSwitch = m_compressionLevelSwitch;
     Q_ASSERT(!compLevelSwitch.isEmpty());
@@ -232,18 +230,17 @@ QString CliParameters::substituteCompressionLevelSwitch(int level)
 }
 
 QString CliParameters::substituteCompressionMethodSwitch(const QString &method)
-{
+{   
     if (method.isEmpty()) {
         return QString();
     }
 
-    const KPluginMetaData metadata = PluginManager().preferredPluginFor(m_mimeType)->metaData();
-    Q_ASSERT(!ArchiveFormat::fromMetadata(m_mimeType, metadata).compressionMethods().isEmpty());
+    Q_ASSERT(!ArchiveFormat::fromMetadata(m_mimeType, m_metaData).compressionMethods().isEmpty());
 
     QString compMethodSwitch = m_compressionMethodSwitch[m_mimeType.name()].toString();
     Q_ASSERT(!compMethodSwitch.isEmpty());
 
-    QString cliMethod = ArchiveFormat::fromMetadata(m_mimeType, metadata).compressionMethods().value(method).toString();
+    QString cliMethod = ArchiveFormat::fromMetadata(m_mimeType, m_metaData).compressionMethods().value(method).toString();
 
     compMethodSwitch.replace(QLatin1String("$CompressionMethod"), cliMethod);
 
@@ -258,8 +255,7 @@ QString CliParameters::substituteMultiVolumeSwitch(uint volumeSize)
         return QString();
     }
 
-    const KPluginMetaData metadata = PluginManager().preferredPluginFor(m_mimeType)->metaData();
-    Q_ASSERT(ArchiveFormat::fromMetadata(m_mimeType, metadata).supportsMultiVolume());
+    Q_ASSERT(ArchiveFormat::fromMetadata(m_mimeType, m_metaData).supportsMultiVolume());
 
     QString multiVolumeSwitch = m_multiVolumeSwitch;
     Q_ASSERT(!multiVolumeSwitch.isEmpty());
