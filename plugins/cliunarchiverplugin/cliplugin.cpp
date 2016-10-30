@@ -86,7 +86,7 @@ void CliPlugin::setupCliParameters(CliParameters *params)
     params->setProperty("listProgram", QStringLiteral("lsar"));
     params->setProperty("listSwitch", QStringList{QStringLiteral("-json")});
 
-    params->setProperty("passwordSwitch", QStringList{QStringLiteral("-password$Password"),
+    params->setProperty("passwordSwitch", QStringList{QStringLiteral("-password"),
                                                       QStringLiteral("$Password")});
 
     params->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("This archive requires a password to unpack. Use the -p option to provide one.")});
@@ -118,7 +118,7 @@ void CliPlugin::readStdout(bool handleAll)
     // We are ready to read the json output.
     readJsonOutput();
 }
-
+/*
 void CliPlugin::cacheParameterList()
 {
     if (!m_cliParameters->isInitialized()) {
@@ -127,6 +127,7 @@ void CliPlugin::cacheParameterList()
     Q_ASSERT(!m_cliParameters->property("listProgram").toString().isEmpty());
     Q_ASSERT(!m_cliParameters->property("extractProgram").toString().isEmpty());
 }
+*/
 
 bool CliPlugin::handleLine(const QString& line)
 {
