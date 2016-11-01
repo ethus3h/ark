@@ -81,6 +81,7 @@ void CliPlugin::setupCliParameters(CliParameters *params)
     params->setProperty("captureProgress", false);
 
     params->setProperty("extractProgram", QStringLiteral("unar"));
+    params->setProperty("extractSwitch", QStringList{QStringLiteral("-D")});
     params->setProperty("extractSwitchNoPreserve", QStringList{QStringLiteral("-D")});
 
     params->setProperty("listProgram", QStringLiteral("lsar"));
