@@ -243,6 +243,10 @@ void Cli7zTest::testListArgs_data()
 
 void Cli7zTest::testListArgs()
 {
+    if (!m_plugin->isValid()) {
+        QSKIP("cli7z plugin not available. Skipping test.", SkipSingle);
+    }
+
     QFETCH(QString, archiveName);
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
                                              QVariant::fromValue(m_plugin->metaData())});
@@ -332,6 +336,10 @@ void Cli7zTest::testAddArgs_data()
 
 void Cli7zTest::testAddArgs()
 {
+    if (!m_plugin->isValid()) {
+        QSKIP("cli7z plugin not available. Skipping test.", SkipSingle);
+    }
+
     QFETCH(QString, archiveName);
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
                                              QVariant::fromValue(m_plugin->metaData())});
@@ -422,6 +430,10 @@ void Cli7zTest::testExtractArgs_data()
 
 void Cli7zTest::testExtractArgs()
 {
+    if (!m_plugin->isValid()) {
+        QSKIP("cli7z plugin not available. Skipping test.", SkipSingle);
+    }
+
     QFETCH(QString, archiveName);
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
                                              QVariant::fromValue(m_plugin->metaData())});

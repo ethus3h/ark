@@ -301,6 +301,10 @@ void CliRarTest::testListArgs_data()
 
 void CliRarTest::testListArgs()
 {
+    if (!m_plugin->isValid()) {
+        QSKIP("clirar plugin not available. Skipping test.", SkipSingle);
+    }
+
     QFETCH(QString, archiveName);
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
                                              QVariant::fromValue(m_plugin->metaData())});
@@ -379,6 +383,10 @@ void CliRarTest::testAddArgs_data()
 
 void CliRarTest::testAddArgs()
 {
+    if (!m_plugin->isValid()) {
+        QSKIP("clirar plugin not available. Skipping test.", SkipSingle);
+    }
+
     QFETCH(QString, archiveName);
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
                                              QVariant::fromValue(m_plugin->metaData())});
@@ -477,6 +485,10 @@ void CliRarTest::testExtractArgs_data()
 
 void CliRarTest::testExtractArgs()
 {
+    if (!m_plugin->isValid()) {
+        QSKIP("clirar plugin not available. Skipping test.", SkipSingle);
+    }
+
     QFETCH(QString, archiveName);
     CliPlugin *plugin = new CliPlugin(this, {QVariant(archiveName),
                                              QVariant::fromValue(m_plugin->metaData())});
