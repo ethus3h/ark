@@ -126,8 +126,9 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
     m_extractedFiles = files;
     m_extractDestDir = destinationDirectory;
 
-    //if (extractArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
-    if (options.encryptedArchiveHint() && password().isEmpty()) {
+
+
+    if (!m_cliParameters->property("passwordSwitch").toString().isEmpty() && options.encryptedArchiveHint() && password().isEmpty()) {
         qCDebug(ARK) << "Password hint enabled, querying user";
         if (!passwordQuery()) {
             return false;
@@ -217,15 +218,13 @@ bool CliInterface::addFiles(const QVector<Archive::Entry*> &files, const Archive
         filesToPass = files;
     }
 
-    //if (addArgs.contains(QStringLiteral("$PasswordSwitch")) && options.encryptedArchiveHint() && password().isEmpty()) {
-    if (options.encryptedArchiveHint() && password().isEmpty()) {
+    if (!m_cliParameters->property("passwordSwitch").toString().isEmpty() && options.encryptedArchiveHint() && password().isEmpty()) {
         qCDebug(ARK) << "Password hint enabled, querying user";
         if (!passwordQuery()) {
             return false;
         }
     }
 
-    qCDebug(ARK) << "pwd:" << password();
     return runProcess(m_cliParameters->property("addProgram").toString(), m_cliParameters->addArgs(filename(),
                                                                                                    entryFullPaths(filesToPass, NoTrailingSlash),
                                                                                                    password(),

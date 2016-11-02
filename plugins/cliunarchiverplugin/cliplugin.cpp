@@ -119,16 +119,6 @@ void CliPlugin::readStdout(bool handleAll)
     // We are ready to read the json output.
     readJsonOutput();
 }
-/*
-void CliPlugin::cacheParameterList()
-{
-    if (!m_cliParameters->isInitialized()) {
-        setupCliParameters(m_cliParameters);
-    }
-    Q_ASSERT(!m_cliParameters->property("listProgram").toString().isEmpty());
-    Q_ASSERT(!m_cliParameters->property("extractProgram").toString().isEmpty());
-}
-*/
 
 bool CliPlugin::handleLine(const QString& line)
 {

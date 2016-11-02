@@ -53,7 +53,6 @@ ReadOnlyArchiveInterface::ReadOnlyArchiveInterface(QObject *parent, const QVaria
     connect(this, &ReadOnlyArchiveInterface::entry, this, &ReadOnlyArchiveInterface::onEntry);
     Q_ASSERT(args.size() >= 2);
     m_metaData = args.at(1).value<KPluginMetaData>();
-    qCDebug(ARK) << "this is a:" << m_metaData.name();
 }
 
 ReadOnlyArchiveInterface::~ReadOnlyArchiveInterface()
