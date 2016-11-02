@@ -91,7 +91,10 @@ Part::Part(QWidget *parentWidget, QObject *parent, const QVariantList& args)
           m_jobTracker(Q_NULLPTR)
 {
     Q_UNUSED(args)
-    setComponentData(*createAboutData(), false);
+    KAboutData aboutData(QStringLiteral("ark"),
+                         i18n("ArkPart"),
+                         QStringLiteral("3.0"));
+    setComponentData(aboutData, false);
 
     new DndExtractAdaptor(this);
 
@@ -219,13 +222,6 @@ void Part::slotCommentChanged()
     }
 }
 
-KAboutData *Part::createAboutData()
-{
-    return new KAboutData(QStringLiteral("ark"),
-                          i18n("ArkPart"),
-                          QStringLiteral("3.0"));
-}
-
 void Part::registerJob(KJob* job)
 {
     if (!m_jobTracker) {
@@ -319,7 +315,7 @@ void Part::setupActions()
     // We use a QSignalMapper for the preview, open and openwith actions. This
     // way we can connect all three actions to the same slot slotOpenEntry and
     // pass the OpenFileMode as argument to the slot.
-    m_signalMapper = new QSignalMapper;
+    m_signalMapper = new QSignalMapper(this);
 
     m_showInfoPanelAction = new KToggleAction(i18nc("@action:inmenu", "Show Information Panel"), this);
     actionCollection()->addAction(QStringLiteral( "show-infopanel" ), m_showInfoPanelAction);
