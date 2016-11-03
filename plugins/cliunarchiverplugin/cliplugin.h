@@ -25,7 +25,6 @@
 
 #include "kerfuffle/archiveentry.h"
 #include "kerfuffle/cliinterface.h"
-#include "kerfuffle/cliparameters.h"
 
 class CliPlugin : public Kerfuffle::CliInterface
 {
@@ -38,7 +37,6 @@ public:
     virtual bool list() Q_DECL_OVERRIDE;
     virtual bool extractFiles(const QVector<Kerfuffle::Archive::Entry*> &files, const QString &destinationDirectory, const Kerfuffle::ExtractionOptions &options) Q_DECL_OVERRIDE;
     virtual void resetParsing() Q_DECL_OVERRIDE;
-    virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
 
     /**
@@ -57,7 +55,7 @@ private slots:
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus) Q_DECL_OVERRIDE;
 
 private:
-
+    void setupCliProperties();
     void readJsonOutput();
 
     QString m_jsonOutput;

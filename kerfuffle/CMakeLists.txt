@@ -16,7 +16,7 @@ set(kerfuffle_SRCS
     queries.cpp
     addtoarchive.cpp
     cliinterface.cpp
-    cliparameters.cpp
+    cliproperties.cpp
     mimetypes.cpp
     plugin.cpp
     pluginmanager.cpp

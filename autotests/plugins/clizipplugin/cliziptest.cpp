@@ -67,9 +67,7 @@ void CliZipTest::testListArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
-    const auto replacedArgs = plugin->m_cliParameters->listArgs(archiveName, QString());
+    const auto replacedArgs = plugin->cliProperties()->listArgs(archiveName, QString());
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -127,13 +125,11 @@ void CliZipTest::testAddArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QString, password);
     QFETCH(int, compressionLevel);
     QFETCH(QString, compressionMethod);
 
-    const auto replacedArgs = plugin->m_cliParameters->addArgs(archiveName, {}, password, false, compressionLevel, compressionMethod, 0);
+    const auto replacedArgs = plugin->cliProperties()->addArgs(archiveName, {}, password, false, compressionLevel, compressionMethod, 0);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -217,8 +213,6 @@ void CliZipTest::testExtractArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QVector<Archive::Entry*>, files);
     QStringList filesList;
     foreach (const Archive::Entry *e, files) {
@@ -228,7 +222,7 @@ void CliZipTest::testExtractArgs()
     QFETCH(bool, preservePaths);
     QFETCH(QString, password);
 
-    const auto replacedArgs = plugin->m_cliParameters->extractArgs(archiveName, filesList, preservePaths, password);
+    const auto replacedArgs = plugin->cliProperties()->extractArgs(archiveName, filesList, preservePaths, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);

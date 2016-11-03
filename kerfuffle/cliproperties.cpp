@@ -25,7 +25,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cliparameters.h"
+#include "cliproperties.h"
 #include "ark_debug.h"
 #include "archiveformat.h"
 #include "pluginmanager.h"
@@ -33,20 +33,14 @@
 namespace Kerfuffle
 {
 
-CliParameters::CliParameters(QObject *parent, const KPluginMetaData &metaData, const QMimeType &archiveType)
+CliProperties::CliProperties(QObject *parent, const KPluginMetaData &metaData, const QMimeType &archiveType)
         : QObject(parent)
         , m_mimeType(archiveType)
         , m_metaData(metaData)
 {
 }
 
-bool CliParameters::isInitialized() const
-{
-    // If listProgram is empty we assume uninitialized state.
-    return !m_listProgram.isEmpty();
-}
-
-QStringList CliParameters::addArgs(const QString &archive, const QStringList &files, const QString &password, bool headerEncryption, int compressionLevel, const QString &compressionMethod, uint volumeSize)
+QStringList CliProperties::addArgs(const QString &archive, const QStringList &files, const QString &password, bool headerEncryption, int compressionLevel, const QString &compressionMethod, uint volumeSize)
 {
     QStringList args;
     foreach (const QString &s, m_addSwitch) {
@@ -71,7 +65,7 @@ QStringList CliParameters::addArgs(const QString &archive, const QStringList &fi
     return args;
 }
 
-QStringList CliParameters::commentArgs(const QString &archive, const QString &commentfile)
+QStringList CliProperties::commentArgs(const QString &archive, const QString &commentfile)
 {
     QStringList args;
     foreach (const QString &s, substituteCommentSwitch(commentfile)) {
@@ -83,7 +77,7 @@ QStringList CliParameters::commentArgs(const QString &archive, const QString &co
     return args;
 }
 
-QStringList CliParameters::deleteArgs(const QString &archive, const QVector<Archive::Entry*> &files, const QString &password)
+QStringList CliProperties::deleteArgs(const QString &archive, const QVector<Archive::Entry*> &files, const QString &password)
 {
     QStringList args;
     args << m_deleteSwitch;
@@ -99,7 +93,7 @@ QStringList CliParameters::deleteArgs(const QString &archive, const QVector<Arch
     return args;
 }
 
-QStringList CliParameters::extractArgs(const QString &archive, const QStringList &files, bool preservePaths, const QString &password)
+QStringList CliProperties::extractArgs(const QString &archive, const QStringList &files, bool preservePaths, const QString &password)
 {
     QStringList args;
 
@@ -119,7 +113,7 @@ QStringList CliParameters::extractArgs(const QString &archive, const QStringList
     return args;
 }
 
-QStringList CliParameters::listArgs(const QString &archive, const QString &password)
+QStringList CliProperties::listArgs(const QString &archive, const QString &password)
 {
     QStringList args;
     foreach (const QString &s, m_listSwitch) {
@@ -134,7 +128,7 @@ QStringList CliParameters::listArgs(const QString &archive, const QString &passw
     return args;
 }
 
-QStringList CliParameters::moveArgs(const QString &archive, const QVector<Archive::Entry*> &entries, Archive::Entry *destination, const QString &password)
+QStringList CliProperties::moveArgs(const QString &archive, const QVector<Archive::Entry*> &entries, Archive::Entry *destination, const QString &password)
 {
     QStringList args;
     args << m_moveSwitch;
@@ -154,7 +148,7 @@ QStringList CliParameters::moveArgs(const QString &archive, const QVector<Archiv
     return args;
 }
 
-QStringList CliParameters::testArgs(const QString &archive, const QString &password)
+QStringList CliProperties::testArgs(const QString &archive, const QString &password)
 {
     QStringList args;
     foreach (const QString &s, m_testSwitch) {
@@ -169,7 +163,7 @@ QStringList CliParameters::testArgs(const QString &archive, const QString &passw
     return args;
 }
 
-QStringList CliParameters::substituteCommentSwitch(const QString &commentfile)
+QStringList CliProperties::substituteCommentSwitch(const QString &commentfile)
 {
     Q_ASSERT(!commentfile.isEmpty());
 
@@ -187,7 +181,7 @@ QStringList CliParameters::substituteCommentSwitch(const QString &commentfile)
     return commentSwitches;
 }
 
-QStringList CliParameters::substitutePasswordSwitch(const QString &password, bool headerEnc)
+QStringList CliProperties::substitutePasswordSwitch(const QString &password, bool headerEnc)
 {
     if (password.isEmpty()) {
         return QStringList();
@@ -213,7 +207,7 @@ QStringList CliParameters::substitutePasswordSwitch(const QString &password, boo
     return passwordSwitch;
 }
 
-QString CliParameters::substituteCompressionLevelSwitch(int level)
+QString CliProperties::substituteCompressionLevelSwitch(int level)
 {
     if (level < 0 || level > 9) {
         return QString();
@@ -229,7 +223,7 @@ QString CliParameters::substituteCompressionLevelSwitch(int level)
     return compLevelSwitch;
 }
 
-QString CliParameters::substituteCompressionMethodSwitch(const QString &method)
+QString CliProperties::substituteCompressionMethodSwitch(const QString &method)
 {   
     if (method.isEmpty()) {
         return QString();
@@ -247,7 +241,7 @@ QString CliParameters::substituteCompressionMethodSwitch(const QString &method)
     return compMethodSwitch;
 }
 
-QString CliParameters::substituteMultiVolumeSwitch(uint volumeSize)
+QString CliProperties::substituteMultiVolumeSwitch(uint volumeSize)
 {
     // The maximum value we allow in the QDoubleSpinBox is 1000MB. Converted to
     // KB this is 1024000.
@@ -265,7 +259,7 @@ QString CliParameters::substituteMultiVolumeSwitch(uint volumeSize)
     return multiVolumeSwitch;
 }
 
-bool CliParameters::isPasswordPrompt(const QString &line)
+bool CliProperties::isPasswordPrompt(const QString &line)
 {
     foreach(const QString &rx, m_passwordPromptPatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -275,7 +269,7 @@ bool CliParameters::isPasswordPrompt(const QString &line)
     return false;
 }
 
-bool CliParameters::isWrongPasswordMsg(const QString &line)
+bool CliProperties::isWrongPasswordMsg(const QString &line)
 {
     foreach(const QString &rx, m_wrongPasswordPatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -285,7 +279,7 @@ bool CliParameters::isWrongPasswordMsg(const QString &line)
     return false;
 }
 
-bool CliParameters::isTestPassedMsg(const QString &line)
+bool CliProperties::isTestPassedMsg(const QString &line)
 {
     foreach(const QString &rx, m_testPassedPatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -295,7 +289,7 @@ bool CliParameters::isTestPassedMsg(const QString &line)
     return false;
 }
 
-bool CliParameters::isfileExistsMsg(const QString &line)
+bool CliProperties::isfileExistsMsg(const QString &line)
 {
     foreach(const QString &rx, m_fileExistsPatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -305,7 +299,7 @@ bool CliParameters::isfileExistsMsg(const QString &line)
     return false;
 }
 
-bool CliParameters::isFileExistsFileName(const QString &line)
+bool CliProperties::isFileExistsFileName(const QString &line)
 {
     foreach(const QString &rx, m_fileExistsFileName) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -315,7 +309,7 @@ bool CliParameters::isFileExistsFileName(const QString &line)
     return false;
 }
 
-bool CliParameters::isExtractionFailedMsg(const QString &line)
+bool CliProperties::isExtractionFailedMsg(const QString &line)
 {
     foreach(const QString &rx, m_extractionFailedPatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -325,7 +319,7 @@ bool CliParameters::isExtractionFailedMsg(const QString &line)
     return false;
 }
 
-bool CliParameters::isCorruptArchiveMsg(const QString &line)
+bool CliProperties::isCorruptArchiveMsg(const QString &line)
 {
     foreach(const QString &rx, m_corruptArchivePatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {
@@ -335,7 +329,7 @@ bool CliParameters::isCorruptArchiveMsg(const QString &line)
     return false;
 }
 
-bool CliParameters::isDiskFullMsg(const QString &line)
+bool CliProperties::isDiskFullMsg(const QString &line)
 {
     foreach(const QString &rx, m_diskFullPatterns) {
         if (QRegularExpression(rx).match(line).hasMatch()) {

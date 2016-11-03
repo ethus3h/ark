@@ -24,8 +24,8 @@
  * ( INCLUDING NEGLIGENCE OR OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CLIPARAMETERS_H
-#define CLIPARAMETERS_H
+#ifndef CLIPROPERTIES_H
+#define CLIPROPERTIES_H
 
 #include "archiveinterface.h"
 #include "kerfuffle_export.h"
@@ -35,7 +35,7 @@
 namespace Kerfuffle
 {
 
-class KERFUFFLE_EXPORT CliParameters: public QObject
+class KERFUFFLE_EXPORT CliProperties: public QObject
 {
     Q_OBJECT
 
@@ -76,9 +76,7 @@ class KERFUFFLE_EXPORT CliParameters: public QObject
     Q_PROPERTY(bool captureProgress MEMBER m_captureProgress)
 
 public:
-    explicit CliParameters(QObject *parent, const KPluginMetaData &metaData, const QMimeType &archiveType);
-
-    bool isInitialized() const;
+    explicit CliProperties(QObject *parent, const KPluginMetaData &metaData, const QMimeType &archiveType);
 
     QStringList addArgs(const QString &archive,
                         const QStringList &files,
@@ -102,9 +100,6 @@ public:
     bool isExtractionFailedMsg(const QString &line);
     bool isCorruptArchiveMsg(const QString &line);
     bool isDiskFullMsg(const QString &line);
-
-protected:
-
 
 private:
     QStringList substituteCommentSwitch(const QString &commentfile);
@@ -154,4 +149,4 @@ private:
 };
 }
 
-#endif /* CLIPARAMETERS_H */
+#endif /* CLIPROPERTIES_H */

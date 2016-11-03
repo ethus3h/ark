@@ -47,11 +47,12 @@ ReadOnlyArchiveInterface::ReadOnlyArchiveInterface(QObject *parent, const QVaria
         , m_isCorrupt(false)
         , m_isMultiVolume(false)
 {
+    Q_ASSERT(args.size() >= 2);
+
     qCDebug(ARK) << "Created read-only interface for" << args.first().toString();
     m_filename = args.first().toString();
     m_mimetype = determineMimeType(m_filename);
     connect(this, &ReadOnlyArchiveInterface::entry, this, &ReadOnlyArchiveInterface::onEntry);
-    Q_ASSERT(args.size() >= 2);
     m_metaData = args.at(1).value<KPluginMetaData>();
 }
 

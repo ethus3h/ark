@@ -26,7 +26,6 @@
 #define CLIPLUGIN_H
 
 #include "kerfuffle/cliinterface.h"
-#include "kerfuffle/cliparameters.h"
 #include "kerfuffle/archiveentry.h"
 
 class CliPlugin : public Kerfuffle::CliInterface
@@ -39,7 +38,6 @@ public:
 
     virtual void resetParsing() Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
-    virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
 
 private:
     enum ArchiveType {
@@ -59,6 +57,8 @@ private:
         ParseStateComment,
         ParseStateEntryInformation
     } m_parseState;
+
+    void setupCliProperties();
 
     int m_linesComment;
     Kerfuffle::Archive::Entry *m_currentArchiveEntry;

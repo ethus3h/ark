@@ -73,17 +73,7 @@ CliInterface::CliInterface(QObject *parent, const QVariantList & args)
     if (QMetaType::type("QProcess::ExitStatus") == 0) {
         qRegisterMetaType<QProcess::ExitStatus>("QProcess::ExitStatus");
     }
-    m_cliParameters = new CliParameters(this, m_metaData, mimetype());
-}
-
-void CliInterface::cacheParameterList()
-{
-    if (!m_cliParameters->isInitialized()) {
-        setupCliParameters(m_cliParameters);
-    }
-
-    Q_ASSERT(!m_cliParameters->property("listProgram").toString().isEmpty());
-    Q_ASSERT(!m_cliParameters->property("extractProgram").toString().isEmpty());
+    m_cliProps = new CliProperties(this, m_metaData, mimetype());
 }
 
 CliInterface::~CliInterface()
@@ -105,11 +95,10 @@ int CliInterface::copyRequiredSignals() const
 bool CliInterface::list()
 {
     resetParsing();
-    cacheParameterList();
     m_operationMode = List;
     m_numberOfEntries = 0;
 
-    if (!runProcess(m_cliParameters->property("listProgram").toString(), m_cliParameters->listArgs(filename(), password()))) {
+    if (!runProcess(m_cliProps->property("listProgram").toString(), m_cliProps->listArgs(filename(), password()))) {
         return false;
     }
 
@@ -120,7 +109,6 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
 {
     qCDebug(ARK) << Q_FUNC_INFO << "to" << destinationDirectory;
 
-    cacheParameterList();
     m_operationMode = Extract;
     m_extractionOptions = options;
     m_extractedFiles = files;
@@ -128,7 +116,7 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
 
 
 
-    if (!m_cliParameters->property("passwordSwitch").toString().isEmpty() && options.encryptedArchiveHint() && password().isEmpty()) {
+    if (!m_cliProps->property("passwordSwitch").toString().isEmpty() && options.encryptedArchiveHint() && password().isEmpty()) {
         qCDebug(ARK) << "Password hint enabled, querying user";
         if (!passwordQuery()) {
             return false;
@@ -156,10 +144,11 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
         QDir::setCurrent(destDir.adjusted(QUrl::RemoveScheme).url());
     }
 
-    if (!runProcess(m_cliParameters->property("extractProgram").toString(), m_cliParameters->extractArgs(filename(),
-                                                                                                         extractFilesList(files),
-                                                                                                         options.preservePaths(),
-                                                                                                         password()))) {
+    if (!runProcess(m_cliProps->property("extractProgram").toString(),
+                    m_cliProps->extractArgs(filename(),
+                                            extractFilesList(files),
+                                            options.preservePaths(),
+                                            password()))) {
         return false;
     }
 
@@ -169,8 +158,6 @@ bool CliInterface::extractFiles(const QVector<Archive::Entry*> &files, const QSt
 bool CliInterface::addFiles(const QVector<Archive::Entry*> &files, const Archive::Entry *destination, const CompressionOptions& options, uint numberOfEntriesToAdd)
 {
     Q_UNUSED(numberOfEntriesToAdd)
-
-    cacheParameterList();
 
     m_operationMode = Add;
 
@@ -218,37 +205,38 @@ bool CliInterface::addFiles(const QVector<Archive::Entry*> &files, const Archive
         filesToPass = files;
     }
 
-    if (!m_cliParameters->property("passwordSwitch").toString().isEmpty() && options.encryptedArchiveHint() && password().isEmpty()) {
+    if (!m_cliProps->property("passwordSwitch").toString().isEmpty() && options.encryptedArchiveHint() && password().isEmpty()) {
         qCDebug(ARK) << "Password hint enabled, querying user";
         if (!passwordQuery()) {
             return false;
         }
     }
 
-    return runProcess(m_cliParameters->property("addProgram").toString(), m_cliParameters->addArgs(filename(),
-                                                                                                   entryFullPaths(filesToPass, NoTrailingSlash),
-                                                                                                   password(),
-                                                                                                   isHeaderEncryptionEnabled(),
-                                                                                                   options.compressionLevel(),
-                                                                                                   options.compressionMethod(),
-                                                                                                   options.volumeSize()));
+    return runProcess(m_cliProps->property("addProgram").toString(),
+                      m_cliProps->addArgs(filename(),
+                                          entryFullPaths(filesToPass, NoTrailingSlash),
+                                          password(),
+                                          isHeaderEncryptionEnabled(),
+                                          options.compressionLevel(),
+                                          options.compressionMethod(),
+                                          options.volumeSize()));
 }
 
 bool CliInterface::moveFiles(const QVector<Archive::Entry*> &files, Archive::Entry *destination, const CompressionOptions &options)
 {
     Q_UNUSED(options);
 
-    cacheParameterList();
     m_operationMode = Move;
 
     m_removedFiles = files;
     QVector<Archive::Entry*> withoutChildren = entriesWithoutChildren(files);
     setNewMovedFiles(files, destination, withoutChildren.count());
 
-    return runProcess(m_cliParameters->property("moveProgram").toString(), m_cliParameters->moveArgs(filename(),
-                                                                                                     withoutChildren,
-                                                                                                     destination,
-                                                                                                     password()));
+    return runProcess(m_cliProps->property("moveProgram").toString(),
+                      m_cliProps->moveArgs(filename(),
+                                           withoutChildren,
+                                           destination,
+                                           password()));
 }
 
 bool CliInterface::copyFiles(const QVector<Archive::Entry*> &files, Archive::Entry *destination, const CompressionOptions &options)
@@ -270,23 +258,20 @@ bool CliInterface::copyFiles(const QVector<Archive::Entry*> &files, Archive::Ent
 
 bool CliInterface::deleteFiles(const QVector<Archive::Entry*> &files)
 {
-    cacheParameterList();
     m_operationMode = Delete;
 
     m_removedFiles = files;
 
-    return runProcess(m_cliParameters->property("deleteProgram").toString(), m_cliParameters->deleteArgs(filename(),
-                                                                                                         files,
-                                                                                                         password()));
+    return runProcess(m_cliProps->property("deleteProgram").toString(),
+                      m_cliProps->deleteArgs(filename(), files, password()));
 }
 
 bool CliInterface::testArchive()
 {
     resetParsing();
-    cacheParameterList();
     m_operationMode = Test;
 
-    return runProcess(m_cliParameters->property("testProgram").toString(), m_cliParameters->testArgs(filename(), password()));
+    return runProcess(m_cliProps->property("testProgram").toString(), m_cliProps->testArgs(filename(), password()));
 }
 
 bool CliInterface::runProcess(const QString& programName, const QStringList& arguments)
@@ -802,14 +787,14 @@ void CliInterface::readStdout(bool handleAll)
     // TODO: The same check methods are called in handleLine(), this
     //       is suboptimal.
 
-    bool wrongPasswordMessage = m_cliParameters->isWrongPasswordMsg(QLatin1String(lines.last()));
+    bool wrongPasswordMessage = m_cliProps->isWrongPasswordMsg(QLatin1String(lines.last()));
 
     bool foundErrorMessage =
         (wrongPasswordMessage ||
-         m_cliParameters->isDiskFullMsg(QLatin1String(lines.last())) ||
-         m_cliParameters->isExtractionFailedMsg(QLatin1String(lines.last())) ||
-         m_cliParameters->isfileExistsMsg(QLatin1String(lines.last()))) ||
-         m_cliParameters->isPasswordPrompt(QLatin1String(lines.last()));
+         m_cliProps->isDiskFullMsg(QLatin1String(lines.last())) ||
+         m_cliProps->isExtractionFailedMsg(QLatin1String(lines.last())) ||
+         m_cliProps->isfileExistsMsg(QLatin1String(lines.last()))) ||
+         m_cliProps->isPasswordPrompt(QLatin1String(lines.last()));
 
     if (foundErrorMessage) {
         handleAll = true;
@@ -865,7 +850,7 @@ bool CliInterface::handleLine(const QString& line)
 {
     // TODO: This should be implemented by each plugin; the way progress is
     //       shown by each CLI application is subject to a lot of variation.
-    if ((m_operationMode == Extract || m_operationMode == Add) && m_cliParameters->property("captureProgress").toBool()) {
+    if ((m_operationMode == Extract || m_operationMode == Add) && m_cliProps->property("captureProgress").toBool()) {
         //read the percentage
         int pos = line.indexOf(QLatin1Char( '%' ));
         if (pos > 1) {
@@ -877,7 +862,7 @@ bool CliInterface::handleLine(const QString& line)
 
     if (m_operationMode == Extract) {
 
-        if (m_cliParameters->isPasswordPrompt(line)) {
+        if (m_cliProps->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Found a password prompt";
 
             Kerfuffle::PasswordNeededQuery query(filename());
@@ -897,20 +882,20 @@ bool CliInterface::handleLine(const QString& line)
             return true;
         }
 
-        if (m_cliParameters->isDiskFullMsg(line)) {
+        if (m_cliProps->isDiskFullMsg(line)) {
             qCWarning(ARK) << "Found disk full message:" << line;
             emit error(i18nc("@info", "Extraction failed because the disk is full."));
             return false;
         }
 
-        if (m_cliParameters->isWrongPasswordMsg(line)) {
+        if (m_cliProps->isWrongPasswordMsg(line)) {
             qCWarning(ARK) << "Wrong password!";
             setPassword(QString());
             emit error(i18nc("@info", "Extraction failed: Incorrect password"));
             return false;
         }
 
-        if (m_cliParameters->isExtractionFailedMsg(line)) {
+        if (m_cliProps->isExtractionFailedMsg(line)) {
             qCWarning(ARK) << "Error in extraction:" << line;
             emit error(i18n("Extraction failed because of an unexpected error."));
             return false;
@@ -922,7 +907,7 @@ bool CliInterface::handleLine(const QString& line)
     }
 
     if (m_operationMode == List) {
-        if (m_cliParameters->isPasswordPrompt(line)) {
+        if (m_cliProps->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Found a password prompt";
 
             Kerfuffle::PasswordNeededQuery query(filename());
@@ -942,20 +927,20 @@ bool CliInterface::handleLine(const QString& line)
             return true;
         }
 
-        if (m_cliParameters->isWrongPasswordMsg(line)) {
+        if (m_cliProps->isWrongPasswordMsg(line)) {
             qCWarning(ARK) << "Wrong password!";
             setPassword(QString());
             emit error(i18n("Incorrect password."));
             return false;
         }
 
-        if (m_cliParameters->isExtractionFailedMsg(line)) {
+        if (m_cliProps->isExtractionFailedMsg(line)) {
             qCWarning(ARK) << "Error in extraction!!";
             emit error(i18n("Extraction failed because of an unexpected error."));
             return false;
         }
 
-        if (m_cliParameters->isCorruptArchiveMsg(line)) {
+        if (m_cliProps->isCorruptArchiveMsg(line)) {
             qCWarning(ARK) << "Archive corrupt";
             setCorrupt(true);
             // Special case: corrupt is not a "fatal" error so we return true here.
@@ -971,14 +956,14 @@ bool CliInterface::handleLine(const QString& line)
 
     if (m_operationMode == Test) {
 
-        if (m_cliParameters->isPasswordPrompt(line)) {
+        if (m_cliProps->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Found a password prompt";
 
             emit error(i18n("Ark does not currently support testing this archive."));
             return false;
         }
 
-        if (m_cliParameters->isTestPassedMsg(line)) {
+        if (m_cliProps->isTestPassedMsg(line)) {
             qCDebug(ARK) << "Test successful";
             emit testSuccess();
             return true;
@@ -991,7 +976,7 @@ bool CliInterface::handleLine(const QString& line)
 bool CliInterface::handleFileExistsMessage(const QString& line)
 {
     // Check for a filename and store it.
-    foreach (const QString &pattern, m_cliParameters->property("fileExistsFileName").toStringList()) {
+    foreach (const QString &pattern, m_cliProps->property("fileExistsFileName").toStringList()) {
         const QRegularExpression rxFileNamePattern(pattern);
         const QRegularExpressionMatch rxMatch = rxFileNamePattern.match(line);
 
@@ -1001,7 +986,7 @@ bool CliInterface::handleFileExistsMessage(const QString& line)
         }
     }
 
-    if (!m_cliParameters->isfileExistsMsg(line)) {
+    if (!m_cliProps->isfileExistsMsg(line)) {
         return false;
     }
 
@@ -1014,7 +999,7 @@ bool CliInterface::handleFileExistsMessage(const QString& line)
     qCDebug(ARK) << "Finished response";
 
     QString responseToProcess;
-    const QStringList choices = m_cliParameters->property("fileExistsInput").toStringList();
+    const QStringList choices = m_cliProps->property("fileExistsInput").toStringList();
 
     if (query.responseOverwrite()) {
         responseToProcess = choices.at(0);
@@ -1094,8 +1079,6 @@ void CliInterface::writeToProcess(const QByteArray& data)
 
 bool CliInterface::addComment(const QString &comment)
 {
-    cacheParameterList();
-
     m_operationMode = Comment;
 
     m_commentTempFile = new QTemporaryFile;
@@ -1109,7 +1092,8 @@ bool CliInterface::addComment(const QString &comment)
     stream << comment << endl;
     m_commentTempFile->close();
 
-    if (!runProcess(m_cliParameters->property("addProgram").toString(), m_cliParameters->commentArgs(filename(), m_commentTempFile->fileName()))) {
+    if (!runProcess(m_cliProps->property("addProgram").toString(),
+                    m_cliProps->commentArgs(filename(), m_commentTempFile->fileName()))) {
         return false;
     }
     m_comment = comment;
@@ -1121,7 +1105,7 @@ QString CliInterface::multiVolumeName() const
     QString oldSuffix = QMimeDatabase().suffixForFileName(filename());
     QString name;
 
-    foreach (const QString &multiSuffix, m_cliParameters->property("multiVolumeSuffix").toStringList()) {
+    foreach (const QString &multiSuffix, m_cliProps->property("multiVolumeSuffix").toStringList()) {
         QString newSuffix = multiSuffix;
         newSuffix.replace(QStringLiteral("$Suffix"), oldSuffix);
         name = filename().remove(oldSuffix).append(newSuffix);
@@ -1130,6 +1114,11 @@ QString CliInterface::multiVolumeName() const
         }
     }
     return name;
+}
+
+CliProperties *CliInterface::cliProperties() const
+{
+    return m_cliProps;
 }
 
 }

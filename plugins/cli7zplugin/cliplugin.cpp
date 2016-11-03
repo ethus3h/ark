@@ -44,6 +44,8 @@ CliPlugin::CliPlugin(QObject *parent, const QVariantList & args)
         , m_isFirstInformationEntry(true)
 {
     qCDebug(ARK) << "Loaded cli_7z plugin";
+
+    setupCliProperties();
 }
 
 CliPlugin::~CliPlugin()
@@ -57,61 +59,60 @@ void CliPlugin::resetParsing()
     m_numberOfVolumes = 0;
 }
 
-void CliPlugin::setupCliParameters(CliParameters *params)
+void CliPlugin::setupCliProperties()
 {
     qCDebug(ARK) << "Setting up parameters...";
 
-    params->setProperty("captureProgress", false);
+    m_cliProps->setProperty("captureProgress", false);
 
-    params->setProperty("addProgram", QStringLiteral("7z"));
-    params->setProperty("addSwitch", QStringList{QStringLiteral("a"),
+    m_cliProps->setProperty("addProgram", QStringLiteral("7z"));
+    m_cliProps->setProperty("addSwitch", QStringList{QStringLiteral("a"),
                                                  QStringLiteral("-l")});
 
-    params->setProperty("deleteProgram", QStringLiteral("7z"));
-    params->setProperty("deleteSwitch", QStringLiteral("d"));
+    m_cliProps->setProperty("deleteProgram", QStringLiteral("7z"));
+    m_cliProps->setProperty("deleteSwitch", QStringLiteral("d"));
 
-    params->setProperty("extractProgram", QStringLiteral("7z"));
-    params->setProperty("extractSwitch", QStringList{QStringLiteral("x")});
-    params->setProperty("extractSwitchNoPreserve", QStringList{QStringLiteral("e")});
+    m_cliProps->setProperty("extractProgram", QStringLiteral("7z"));
+    m_cliProps->setProperty("extractSwitch", QStringList{QStringLiteral("x")});
+    m_cliProps->setProperty("extractSwitchNoPreserve", QStringList{QStringLiteral("e")});
 
-    params->setProperty("listProgram", QStringLiteral("7z"));
-    params->setProperty("listSwitch", QStringList{QStringLiteral("l"),
+    m_cliProps->setProperty("listProgram", QStringLiteral("7z"));
+    m_cliProps->setProperty("listSwitch", QStringList{QStringLiteral("l"),
                                                   QStringLiteral("-slt")});
 
-    params->setProperty("moveProgram", QStringLiteral("7z"));
-    params->setProperty("moveSwitch", QStringLiteral("rn"));
+    m_cliProps->setProperty("moveProgram", QStringLiteral("7z"));
+    m_cliProps->setProperty("moveSwitch", QStringLiteral("rn"));
 
-    params->setProperty("testProgram", QStringLiteral("7z"));
-    params->setProperty("testSwitch", QStringLiteral("t"));
+    m_cliProps->setProperty("testProgram", QStringLiteral("7z"));
+    m_cliProps->setProperty("testSwitch", QStringLiteral("t"));
 
-    params->setProperty("passwordSwitch", QStringList{QStringLiteral("-p$Password")});
-    params->setProperty("passwordSwitchHeaderEnc", QStringList{QStringLiteral("-p$Password"),
+    m_cliProps->setProperty("passwordSwitch", QStringList{QStringLiteral("-p$Password")});
+    m_cliProps->setProperty("passwordSwitchHeaderEnc", QStringList{QStringLiteral("-p$Password"),
                                                                QStringLiteral("-mhe=on")});
-    params->setProperty("compressionLevelSwitch", QStringLiteral("-mx=$CompressionLevel"));
-    params->setProperty("compressionMethodSwitch", QHash<QString,QVariant>{{QStringLiteral("application/x-7z-compressed"), QStringLiteral("-m0=$CompressionMethod")},
+    m_cliProps->setProperty("compressionLevelSwitch", QStringLiteral("-mx=$CompressionLevel"));
+    m_cliProps->setProperty("compressionMethodSwitch", QHash<QString,QVariant>{{QStringLiteral("application/x-7z-compressed"), QStringLiteral("-m0=$CompressionMethod")},
                                                                            {QStringLiteral("application/zip"), QStringLiteral("-mm=$CompressionMethod")}});
-    params->setProperty("multiVolumeSwitch", QStringLiteral("-v$VolumeSizek"));
+    m_cliProps->setProperty("multiVolumeSwitch", QStringLiteral("-v$VolumeSizek"));
 
 
-    params->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("Enter password \\(will not be echoed\\)")});
-    params->setProperty("wrongPasswordPatterns", QStringList{QStringLiteral("Wrong password")});
-    params->setProperty("testPassedPatterns", QStringList{QStringLiteral("^Everything is Ok$")});
-    params->setProperty("fileExistsPatterns", QStringList{QStringLiteral("^\\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $"),
+    m_cliProps->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("Enter password \\(will not be echoed\\)")});
+    m_cliProps->setProperty("wrongPasswordPatterns", QStringList{QStringLiteral("Wrong password")});
+    m_cliProps->setProperty("testPassedPatterns", QStringList{QStringLiteral("^Everything is Ok$")});
+    m_cliProps->setProperty("fileExistsPatterns", QStringList{QStringLiteral("^\\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $"),
                                                           QStringLiteral("^\\? \\(Y\\)es / \\(N\\)o / \\(A\\)lways / \\(S\\)kip all / A\\(u\\)to rename all / \\(Q\\)uit\\? $")});
-    params->setProperty("fileExistsFileName", QStringList{QStringLiteral("^file \\./(.*)$"),
+    m_cliProps->setProperty("fileExistsFileName", QStringList{QStringLiteral("^file \\./(.*)$"),
                                                           QStringLiteral("^  Path:     \\./(.*)$")});
-    params->setProperty("fileExistsInput", QStringList{QStringLiteral("Y"),   //Overwrite
+    m_cliProps->setProperty("fileExistsInput", QStringList{QStringLiteral("Y"),   //Overwrite
                                                        QStringLiteral("N"),   //Skip
                                                        QStringLiteral("A"),   //Overwrite all
                                                        QStringLiteral("S"),   //Autoskip
                                                        QStringLiteral("Q")}); //Cancel
-    params->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("ERROR: E_FAIL"),
+    m_cliProps->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("ERROR: E_FAIL"),
                                                                 QStringLiteral("Open ERROR: Can not open the file as \\[7z\\] archive")});
-    params->setProperty("corruptArchivePatterns", QStringList{QStringLiteral("Unexpected end of archive"),
+    m_cliProps->setProperty("corruptArchivePatterns", QStringList{QStringLiteral("Unexpected end of archive"),
                                                               QStringLiteral("Headers Error")});
-    params->setProperty("diskFullPatterns", QStringList{QStringLiteral("No space left on device")});
-    params->setProperty("multiVolumeSuffix", QStringList{QStringLiteral("$Suffix.001")});
-
+    m_cliProps->setProperty("diskFullPatterns", QStringList{QStringLiteral("No space left on device")});
+    m_cliProps->setProperty("multiVolumeSuffix", QStringList{QStringLiteral("$Suffix.001")});
 }
 
 bool CliPlugin::readListLine(const QString& line)

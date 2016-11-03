@@ -23,7 +23,6 @@
 #define CLIPLUGIN_H
 
 #include "kerfuffle/cliinterface.h"
-#include "kerfuffle/cliparameters.h"
 
 #include <QTemporaryDir>
 
@@ -39,7 +38,6 @@ public:
 
     virtual void resetParsing() Q_DECL_OVERRIDE;
     virtual QString escapeFileName(const QString &fileName) const Q_DECL_OVERRIDE;
-    virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
 
     virtual bool moveFiles(const QVector<Archive::Entry*> &files, Archive::Entry *destination, const CompressionOptions& options) Q_DECL_OVERRIDE;
@@ -49,6 +47,7 @@ private slots:
     void continueMoving(bool result);
 
 private:
+    void setupCliProperties();
     bool setMovingAddedFiles();
     void finishMoving(bool result);
     QString convertCompressionMethod(const QString &method);

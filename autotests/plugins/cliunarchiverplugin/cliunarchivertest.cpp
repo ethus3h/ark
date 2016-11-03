@@ -145,8 +145,6 @@ void CliUnarchiverTest::testList()
                                              QVariant::fromValue(m_plugin->metaData())});
     QSignalSpy signalSpy(plugin, &CliPlugin::entry);
 
-    plugin->cacheParameterList();
-
     QFETCH(QString, jsonFilePath);
     QFETCH(int, expectedEntriesCount);
 
@@ -219,10 +217,8 @@ void CliUnarchiverTest::testListArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QString, password);
-    const auto replacedArgs = plugin->m_cliParameters->listArgs(archiveName, password);
+    const auto replacedArgs = plugin->cliProperties()->listArgs(archiveName, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -391,8 +387,6 @@ void CliUnarchiverTest::testExtractArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QVector<Archive::Entry*>, files);
     QStringList filesList;
     foreach (const Archive::Entry *e, files) {
@@ -401,7 +395,7 @@ void CliUnarchiverTest::testExtractArgs()
 
     QFETCH(QString, password);
 
-    const auto replacedArgs = plugin->m_cliParameters->extractArgs(archiveName, filesList, false, password);
+    const auto replacedArgs = plugin->cliProperties()->extractArgs(archiveName, filesList, false, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);

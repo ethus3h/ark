@@ -38,6 +38,7 @@ CliPlugin::CliPlugin(QObject *parent, const QVariantList &args)
         : CliInterface(parent, args)
 {
     qCDebug(ARK) << "Loaded cli_unarchiver plugin";
+    setupCliProperties();
 }
 
 CliPlugin::~CliPlugin()
@@ -47,10 +48,9 @@ CliPlugin::~CliPlugin()
 bool CliPlugin::list()
 {
     resetParsing();
-    cacheParameterList();
     m_operationMode = List;
 
-    return runProcess(m_cliParameters->property("listProgram").toString(), m_cliParameters->listArgs(filename(), password()));
+    return runProcess(m_cliProps->property("listProgram").toString(), m_cliProps->listArgs(filename(), password()));
 }
 
 bool CliPlugin::extractFiles(const QVector<Archive::Entry*> &files, const QString &destinationDirectory, const ExtractionOptions &options)
@@ -76,23 +76,23 @@ void CliPlugin::resetParsing()
     m_numberOfVolumes = 0;
 }
 
-void CliPlugin::setupCliParameters(CliParameters *params)
+void CliPlugin::setupCliProperties()
 {
-    params->setProperty("captureProgress", false);
+    m_cliProps->setProperty("captureProgress", false);
 
-    params->setProperty("extractProgram", QStringLiteral("unar"));
-    params->setProperty("extractSwitch", QStringList{QStringLiteral("-D")});
-    params->setProperty("extractSwitchNoPreserve", QStringList{QStringLiteral("-D")});
+    m_cliProps->setProperty("extractProgram", QStringLiteral("unar"));
+    m_cliProps->setProperty("extractSwitch", QStringList{QStringLiteral("-D")});
+    m_cliProps->setProperty("extractSwitchNoPreserve", QStringList{QStringLiteral("-D")});
 
-    params->setProperty("listProgram", QStringLiteral("lsar"));
-    params->setProperty("listSwitch", QStringList{QStringLiteral("-json")});
+    m_cliProps->setProperty("listProgram", QStringLiteral("lsar"));
+    m_cliProps->setProperty("listSwitch", QStringList{QStringLiteral("-json")});
 
-    params->setProperty("passwordSwitch", QStringList{QStringLiteral("-password"),
+    m_cliProps->setProperty("passwordSwitch", QStringList{QStringLiteral("-password"),
                                                       QStringLiteral("$Password")});
 
-    params->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("This archive requires a password to unpack. Use the -p option to provide one.")});
+    m_cliProps->setProperty("passwordPromptPatterns", QStringList{QStringLiteral("This archive requires a password to unpack. Use the -p option to provide one.")});
 
-    params->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("Failed! \\((.+)\\)$"),
+    m_cliProps->setProperty("extractionFailedPatterns", QStringList{QStringLiteral("Failed! \\((.+)\\)$"),
                                                                 QStringLiteral("Segmentation fault$")});
 }
 
@@ -129,7 +129,7 @@ bool CliPlugin::handleLine(const QString& line)
 
     // TODO: is this check really needed?
     if (m_operationMode == Copy) {
-        if (m_cliParameters->isExtractionFailedMsg(line)) {
+        if (m_cliProps->isExtractionFailedMsg(line)) {
             qCWarning(ARK) << "Error in extraction:" << line;
             emit error(i18n("Extraction failed because of an unexpected error."));
             return false;
@@ -138,7 +138,7 @@ bool CliPlugin::handleLine(const QString& line)
 
     if (m_operationMode == List) {
         // This can only be an header-encrypted archive.
-        if (m_cliParameters->isPasswordPrompt(line)) {
+        if (m_cliProps->isPasswordPrompt(line)) {
             qCDebug(ARK) << "Detected header-encrypted RAR archive";
 
             Kerfuffle::PasswordNeededQuery query(filename());

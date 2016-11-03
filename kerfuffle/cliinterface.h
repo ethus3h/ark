@@ -31,7 +31,7 @@
 
 #include "archiveinterface.h"
 #include "archiveentry.h"
-#include "cliparameters.h"
+#include "cliproperties.h"
 #include "kerfuffle_export.h"
 #include "part/archivemodel.h"
 
@@ -70,21 +70,10 @@ public:
     virtual bool testArchive() Q_DECL_OVERRIDE;
 
     virtual void resetParsing() = 0;
-    virtual void setupCliParameters(CliParameters *params) = 0;
     virtual bool readListLine(const QString &line) = 0;
     bool doKill() Q_DECL_OVERRIDE;
     bool doSuspend() Q_DECL_OVERRIDE;
     bool doResume() Q_DECL_OVERRIDE;
-
-    /**
-     * Performs any additional escaping and processing on @p fileName
-     * before passing it to the underlying process.
-     *
-     * The default implementation returns @p fileName unchanged.
-     *
-     * @param fileName String to escape.
-     */
-    virtual QString escapeFileName(const QString &fileName) const;
 
     /**
      * Sets if the listing should include empty lines.
@@ -111,9 +100,7 @@ public:
 
     QString multiVolumeName() const Q_DECL_OVERRIDE;
 
-    virtual void cacheParameterList();
-
-    CliParameters *m_cliParameters;
+    CliProperties *cliProperties() const;
 
 protected:
 
@@ -148,8 +135,19 @@ protected:
      */
     bool passwordQuery();
 
+    /**
+     * Performs any additional escaping and processing on @p fileName
+     * before passing it to the underlying process.
+     *
+     * The default implementation returns @p fileName unchanged.
+     *
+     * @param fileName String to escape.
+     */
+    virtual QString escapeFileName(const QString &fileName) const;
+
     void cleanUp();
 
+    CliProperties *m_cliProps;
     QString m_oldWorkingDir;
     QTemporaryDir *m_tempExtractDir;
     QTemporaryDir *m_tempAddDir;

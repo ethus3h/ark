@@ -310,10 +310,8 @@ void CliRarTest::testListArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QString, password);
-    const auto replacedArgs = plugin->m_cliParameters->listArgs(archiveName, password);
+    const auto replacedArgs = plugin->cliProperties()->listArgs(archiveName, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -392,15 +390,13 @@ void CliRarTest::testAddArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QString, password);
     QFETCH(bool, encryptHeader);
     QFETCH(int, compressionLevel);
     QFETCH(QString, compressionMethod);
     QFETCH(ulong, volumeSize);
 
-    const auto replacedArgs = plugin->m_cliParameters->addArgs(archiveName, {}, password, encryptHeader, compressionLevel, compressionMethod, volumeSize);
+    const auto replacedArgs = plugin->cliProperties()->addArgs(archiveName, {}, password, encryptHeader, compressionLevel, compressionMethod, volumeSize);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);
@@ -494,8 +490,6 @@ void CliRarTest::testExtractArgs()
                                              QVariant::fromValue(m_plugin->metaData())});
     QVERIFY(plugin);
 
-    plugin->cacheParameterList();
-
     QFETCH(QVector<Archive::Entry*>, files);
     QStringList filesList;
     foreach (const Archive::Entry *e, files) {
@@ -505,7 +499,7 @@ void CliRarTest::testExtractArgs()
     QFETCH(bool, preservePaths);
     QFETCH(QString, password);
 
-    const auto replacedArgs = plugin->m_cliParameters->extractArgs(archiveName, filesList, preservePaths, password);
+    const auto replacedArgs = plugin->cliProperties()->extractArgs(archiveName, filesList, preservePaths, password);
 
     QFETCH(QStringList, expectedArgs);
     QCOMPARE(replacedArgs, expectedArgs);

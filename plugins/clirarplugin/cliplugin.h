@@ -26,7 +26,6 @@
 #define CLIPLUGIN_H
 
 #include "kerfuffle/cliinterface.h"
-#include "kerfuffle/cliparameters.h"
 
 class CliPlugin : public Kerfuffle::CliInterface
 {
@@ -37,7 +36,6 @@ public:
     virtual ~CliPlugin();
 
     virtual void resetParsing() Q_DECL_OVERRIDE;
-    virtual void setupCliParameters(Kerfuffle::CliParameters *params) Q_DECL_OVERRIDE;
     virtual bool readListLine(const QString &line) Q_DECL_OVERRIDE;
 
 private:
@@ -50,6 +48,8 @@ private:
         ParseStateEntryDetails,
         ParseStateLinkTarget
     } m_parseState;
+
+    void setupCliProperties();
 
     bool handleUnrar5Line(const QString &line);
     void handleUnrar5Entry();
